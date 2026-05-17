@@ -1,10 +1,10 @@
 /**
- * seedData — one-time mock data initializer.
+ * seedData — one-time real data initializer.
  *
  * Sits ON TOP of dataStore (never touches localStorage / IndexedDB directly).
  * Call seedIfEmpty(locale) on first client mount; it's a no-op if data exists.
  *
- * Photos are fetched from picsum.photos (stable seed → same image every time),
+ * Photos are fetched from /demo-photos/ (static assets bundled in /public),
  * converted to base64 data URLs, and persisted to IndexedDB via dataStore.savePhoto.
  * This satisfies the "screenshot-friendly, same-origin" constraint in CLAUDE.md.
  */
@@ -22,64 +22,132 @@ import {
 type Locale = "en" | "ja" | "zh";
 
 interface PlantSeed {
-  key: "pansy" | "rubber" | "daisy";
+  key: string;
   names: Record<Locale, string>;
-  daysAgo: number; // when caring started
-  photoSeeds: string[]; // picsum.photos seeds (one per photo, stable across loads)
+  nickname?: string;
+  startedOn: string; // YYYY-MM-DD
+  coverPhoto: string; // path under /demo-photos/
   records: Array<{
-    dayOffset: number; // 0 = startedOn, increasing toward today
+    date: string; // YYYY-MM-DD
     actions: ActionType[];
     states: StateType[];
     note?: Record<Locale, string>;
-    attachPhotoIndex?: number; // index into photoSeeds
+    photo?: string; // path under /demo-photos/
   }>;
 }
 
 const PLANTS: PlantSeed[] = [
   {
-    key: "pansy",
-    names: { en: "Pansy", ja: "パンジー", zh: "三色堇" },
-    daysAgo: 90,
-    photoSeeds: ["verdant-pansy-1", "verdant-pansy-2", "verdant-pansy-3", "verdant-pansy-4", "verdant-pansy-5"],
-    records: [
-      { dayOffset: 0, actions: ["repot"], states: ["lookingBeautiful"], attachPhotoIndex: 0,
-        note: { en: "Welcome home 🌿", ja: "おうちへようこそ 🌿", zh: "欢迎回家 🌿" } },
-      { dayOffset: 14, actions: ["water"], states: [], attachPhotoIndex: 1 },
-      { dayOffset: 35, actions: ["water", "fertilize"], states: ["newLeaf"], attachPhotoIndex: 2,
-        note: { en: "Tiny new leaf today!", ja: "今日、小さな新葉が出た！", zh: "今天长出小新叶了！" } },
-      { dayOffset: 58, actions: ["water"], states: ["blooming"], attachPhotoIndex: 3,
-        note: { en: "First flower 🌸", ja: "初めての花 🌸", zh: "第一朵花 🌸" } },
-      { dayOffset: 75, actions: ["prune"], states: ["lookingBeautiful"], attachPhotoIndex: 4 },
-      { dayOffset: 88, actions: ["water"], states: [] },
-    ],
-  },
-  {
     key: "rubber",
-    names: { en: "Rubber Tree", ja: "ゴムの木", zh: "橡皮树" },
-    daysAgo: 60,
-    photoSeeds: ["verdant-rubber-1", "verdant-rubber-2", "verdant-rubber-3", "verdant-rubber-4", "verdant-rubber-5"],
+    names: { en: "Rubber Tree", ja: "ゴムノキ", zh: "橡皮树" },
+    nickname: "gogo",
+    startedOn: "2025-11-27",
+    coverPhoto: "/demo-photos/rubber-cover.jpg",
     records: [
-      { dayOffset: 0, actions: ["repot"], states: ["lookingBeautiful"], attachPhotoIndex: 0,
-        note: { en: "Just got home from the shop", ja: "お店から連れて帰った日", zh: "刚从花店带回家" } },
-      { dayOffset: 12, actions: ["water"], states: [], attachPhotoIndex: 1 },
-      { dayOffset: 28, actions: ["water", "fertilize"], states: ["newLeaf"], attachPhotoIndex: 2,
-        note: { en: "Two new leaves unfurled 🌿", ja: "新葉が二枚開いた 🌿", zh: "两片新叶展开了 🌿" } },
-      { dayOffset: 42, actions: ["water"], states: ["lookingBeautiful"], attachPhotoIndex: 3 },
-      { dayOffset: 58, actions: ["water"], states: ["newLeaf"], attachPhotoIndex: 4 },
+      {
+        date: "2025-12-01",
+        actions: ["repot"],
+        states: [],
+      },
+      {
+        date: "2025-12-15",
+        actions: [],
+        states: ["newLeaf", "lookingBeautiful"],
+        photo: "/demo-photos/rubber-rec1-photo0.jpg",
+      },
+      {
+        date: "2026-04-14",
+        actions: [],
+        states: ["sick"],
+      },
+      {
+        date: "2026-05-13",
+        actions: [],
+        states: ["newLeaf", "lookingBeautiful"],
+      },
+      {
+        date: "2026-05-14",
+        actions: ["fertilize"],
+        states: [],
+      },
+      {
+        date: "2026-05-17",
+        actions: [],
+        states: ["lookingBeautiful"],
+        note: {
+          en: "Grew to 40cm!",
+          ja: "40cmになった",
+          zh: "长到40cm了！",
+        },
+        photo: "/demo-photos/rubber-rec5-photo0.jpg",
+      },
     ],
   },
   {
     key: "daisy",
-    names: { en: "Blue-Eyed Daisy", ja: "オステオスペルマム", zh: "蓝眼菊" },
-    daysAgo: 30,
-    photoSeeds: ["verdant-daisy-1", "verdant-daisy-2", "verdant-daisy-3", "verdant-daisy-4"],
+    names: { en: "Osteospermum", ja: "オステオスペルマム", zh: "蓝眼菊" },
+    nickname: "Fay",
+    startedOn: "2026-02-14",
+    coverPhoto: "/demo-photos/daisy-cover.jpg",
     records: [
-      { dayOffset: 0, actions: ["repot"], states: ["lookingBeautiful"], attachPhotoIndex: 0,
-        note: { en: "First day together", ja: "初めての一日", zh: "在一起的第一天" } },
-      { dayOffset: 8, actions: ["water"], states: [], attachPhotoIndex: 1 },
-      { dayOffset: 18, actions: ["water", "fertilize"], states: ["blooming"], attachPhotoIndex: 2,
-        note: { en: "Buds appeared 🌸", ja: "蕾が出てきた 🌸", zh: "冒花苞了 🌸" } },
-      { dayOffset: 28, actions: ["water"], states: ["blooming", "lookingBeautiful"], attachPhotoIndex: 3 },
+      {
+        date: "2026-02-15",
+        actions: [],
+        states: ["lookingBeautiful"],
+        note: {
+          en: "Happy new year! 🌸",
+          ja: "happy new year!",
+          zh: "新年快乐！🌸",
+        },
+        photo: "/demo-photos/daisy-rec0-photo0.jpg",
+      },
+      {
+        date: "2026-02-15",
+        actions: ["repot"],
+        states: [],
+      },
+      {
+        date: "2026-03-27",
+        actions: [],
+        states: ["sick"],
+        photo: "/demo-photos/daisy-rec2-photo0.jpg",
+      },
+      {
+        date: "2026-04-16",
+        actions: [],
+        states: ["blooming"],
+        photo: "/demo-photos/daisy-rec3-photo0.jpg",
+      },
+      {
+        date: "2026-04-22",
+        actions: ["repot"],
+        states: [],
+      },
+    ],
+  },
+  {
+    key: "tulip",
+    names: { en: "Tulip", ja: "チューリップ", zh: "郁金香" },
+    startedOn: "2025-12-25",
+    coverPhoto: "/demo-photos/tulip-cover.jpg",
+    records: [
+      {
+        date: "2026-02-28",
+        actions: ["repot"],
+        states: [],
+      },
+      {
+        date: "2026-03-17",
+        actions: [],
+        states: ["newLeaf"],
+        photo: "/demo-photos/tulip-rec1-photo0.jpg",
+      },
+      {
+        date: "2026-04-07",
+        actions: [],
+        states: ["lookingBeautiful", "blooming"],
+        photo: "/demo-photos/tulip-rec2-photo0.jpg",
+      },
     ],
   },
 ];
@@ -98,18 +166,6 @@ async function fetchAsDataUrl(url: string): Promise<string> {
   });
 }
 
-function picsumUrl(seed: string, size = 600): string {
-  return `https://picsum.photos/seed/${encodeURIComponent(seed)}/${size}/${size}`;
-}
-
-function isoDaysAgo(days: number): string {
-  const d = new Date();
-  d.setDate(d.getDate() - days);
-  return d.toISOString();
-}
-
-// ─── Public API ───────────────────────────────────────────────────────────────
-
 // ─── Double-seed protection ───────────────────────────────────────────────────
 //
 // Two guards layered together:
@@ -127,7 +183,7 @@ const SEED_TIMEOUT_MS = 30_000;
 let _seedInFlight: Promise<void> | null = null;
 
 /**
- * seedIfEmpty — seeds mock data if the store is empty.
+ * seedIfEmpty — seeds real demo data if the store is empty.
  * Returns true if seeding actually ran, false if data already existed.
  * Dispatches "verdant:seeded" on window when new data is ready,
  * so any mounted hooks can re-fetch without a full page reload.
@@ -142,8 +198,7 @@ export async function seedIfEmpty(locale: Locale): Promise<boolean> {
   const existing = localStorage.getItem(LS_SEEDING_KEY);
   if (existing) {
     const startedAt = Number(existing);
-    if (Date.now() - startedAt < SEED_TIMEOUT_MS) return false; // another run is in progress
-    // stale flag — remove and continue
+    if (Date.now() - startedAt < SEED_TIMEOUT_MS) return false;
     localStorage.removeItem(LS_SEEDING_KEY);
   }
 
@@ -155,6 +210,7 @@ export async function seedIfEmpty(locale: Locale): Promise<boolean> {
 
   _seedInFlight = runSeed(locale).finally(() => {
     localStorage.removeItem(LS_SEEDING_KEY);
+    _seedInFlight = null;
   });
 
   await _seedInFlight;
@@ -166,46 +222,51 @@ export async function seedIfEmpty(locale: Locale): Promise<boolean> {
 
 async function runSeed(locale: Locale): Promise<void> {
   for (const seed of PLANTS) {
-    const startedAt = isoDaysAgo(seed.daysAgo);
-
-    // 1. create plant (no coverPhotoId yet — need to save photos first)
+    // 1. Create plant (no coverPhotoId yet)
     const plant: Plant = await savePlant({
       name: seed.names[locale],
-      startedOn: startedAt.slice(0, 10), // YYYY-MM-DD
+      nickname: seed.nickname,
+      startedOn: seed.startedOn,
     });
 
-    // 2. save all photos for this plant
-    const photoIds: string[] = [];
-    for (let i = 0; i < seed.photoSeeds.length; i++) {
-      // distribute photo timestamps across the caring period
-      const photoDayOffset = Math.round((i * seed.daysAgo) / Math.max(seed.photoSeeds.length - 1, 1));
-      const photoTimestamp = isoDaysAgo(seed.daysAgo - photoDayOffset);
-      const dataUrl = await fetchAsDataUrl(picsumUrl(seed.photoSeeds[i]));
-      const photo = await savePhoto({
-        plantId: plant.id,
-        timestamp: photoTimestamp,
-        dataUrl,
-      });
-      photoIds.push(photo.id);
-    }
+    // 2. Fetch and save cover photo
+    const coverDataUrl = await fetchAsDataUrl(seed.coverPhoto);
+    const coverPhoto = await savePhoto({
+      plantId: plant.id,
+      timestamp: new Date(seed.startedOn).toISOString(),
+      dataUrl: coverDataUrl,
+    });
 
-    // 3. update plant with coverPhotoId = first (oldest) photo
+    // 3. Update plant with coverPhotoId
     await savePlant({
       id: plant.id,
       name: plant.name,
+      nickname: plant.nickname,
       startedOn: plant.startedOn,
-      coverPhotoId: photoIds[0],
+      coverPhotoId: coverPhoto.id,
     });
 
-    // 4. create timeline records
+    // 4. Create timeline records
     for (const r of seed.records) {
-      const recordTimestamp = isoDaysAgo(seed.daysAgo - r.dayOffset);
+      const timestamp = new Date(r.date).toISOString();
+      let photoIds: string[] = [];
+
+      if (r.photo) {
+        const dataUrl = await fetchAsDataUrl(r.photo);
+        const photo = await savePhoto({
+          plantId: plant.id,
+          timestamp,
+          dataUrl,
+        });
+        photoIds = [photo.id];
+      }
+
       await saveRecord({
         plantId: plant.id,
-        timestamp: recordTimestamp,
+        timestamp,
         actions: r.actions,
         states: r.states,
-        photoIds: r.attachPhotoIndex !== undefined ? [photoIds[r.attachPhotoIndex]] : [],
+        photoIds,
         note: r.note?.[locale],
       });
     }
