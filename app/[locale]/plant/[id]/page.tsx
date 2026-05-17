@@ -28,6 +28,7 @@ const ACTION_EMOJI: Record<ActionType, string> = {
   fertilize: "🌱",
   repot: "🪴",
   prune: "✂️",
+  bringHome: "🏠",
 };
 const STATE_EMOJI: Record<StateType, string> = {
   newLeaf: "🌿",
