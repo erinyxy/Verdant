@@ -60,7 +60,8 @@ export type GrowthMarkEventType =
   | "lookingBeautiful"
   | "repot"
   | "fertilize"
-  | "prune";
+  | "prune"
+  | "bringHome";
 
 export interface GrowthMarkEvent {
   timestamp: string; // ISO 8601
@@ -303,6 +304,7 @@ const MILESTONES: MilestoneDays[] = [7, 30, 90, 180, 365];
 
 // Used for both same-day merge and >8 truncation.
 const EVENT_PRIORITY: Record<GrowthMarkEventType, number> = {
+  bringHome: 9,
   lastPhoto: 8,
   firstPhoto: 7,
   blooming: 6,
