@@ -1,0 +1,143 @@
+{
+  "nav": {
+    "home": "Home",
+    "garden": "My Garden",
+    "milestones": "Milestones"
+  },
+  "garden": {
+    "title": "My Garden",
+    "subtitle": "My little green world",
+    "addPlant": "Add",
+    "daysCount": "{n} days together 🌿",
+    "noLastRecord": "No records yet",
+    "emptyTitle": "Your garden is waiting",
+    "emptyCta": "Add your first plant",
+    "pastAction": {
+      "water": "💧 Watered",
+      "fertilize": "🌱 Fertilized",
+      "repot": "🪴 Repotted",
+      "prune": "✂️ Pruned",
+      "bringHome": "🏠 Brought home"
+    },
+    "pastState": {
+      "newLeaf": "🌿 New leaf",
+      "blooming": "🌸 Blooming",
+      "sick": "⚠️ Feeling unwell",
+      "lookingBeautiful": "💚 Looking beautiful"
+    }
+  },
+  "home": {
+    "title": "A moment\nwith your plants",
+    "recentActivity": "Recent Activity",
+    "growthLookback": "Growth Lookback",
+    "myPlants": "My Plants",
+    "addPlant": "Add Plant",
+    "recordButton": "+ Record",
+    "daysAgo": "{days} days ago",
+    "today": "Today",
+    "sevenDaysAgo": "7 days ago",
+    "thirtyDaysAgo": "30 days ago",
+    "firstDay": "First Day",
+    "growthSummary": "Growing quietly, little by little 🌿",
+    "viewDetail": "Detail",
+    "emptyRecent": "Still building memories…",
+    "emptyPlants": "Your plants will appear here",
+    "viewAll": "View all"
+  },
+  "record": {
+    "title": "Quick Record",
+    "selectPlant": "Select a plant",
+    "action": "Action",
+    "state": "State",
+    "photo": "Photo",
+    "addPhoto": "Add Photo",
+    "note": "Note",
+    "notePlaceholder": "Optional note...",
+    "save": "Save",
+    "water": "Water",
+    "fertilize": "Fertilize",
+    "repot": "Repot",
+    "prune": "Prune",
+    "newLeaf": "New leaf",
+    "blooming": "Blooming",
+    "sick": "Sick",
+    "lookingBeautiful": "Looking beautiful",
+    "date": "When",
+    "saved": "Saved ✓",
+    "comingSoon": "Record page — coming soon",
+    "bringHome": "Brought home"
+  },
+  "plantDetail": {
+    "startedOn": "Started",
+    "recordButton": "+ Record",
+    "growthCompare": "Growth Compare",
+    "timeline": "Timeline",
+    "noRecords": "No records yet",
+    "growthSummary": "Noticeable changes recently",
+    "memoryAccumulating": "Still building memories..."
+  },
+  "newcomer": {
+    "title": "Add a Plant",
+    "uploadPhoto": "Upload Photo",
+    "plantName": "Plant Name",
+    "plantNamePlaceholder": "e.g. Monstera",
+    "nickname": "Nickname",
+    "nicknamePlaceholder": "Optional",
+    "startedOn": "Started caring on",
+    "save": "Save",
+    "nameRequired": "Plant name is required"
+  },
+  "marks": {
+    "title": "Growth Marks",
+    "subtitle": "Some moments worth keeping",
+    "milestoneLabel": "{n} Days",
+    "dayLabel": "Day {n}",
+    "tagline": "Growing quietly, little by little 🌿",
+    "empty": "Your first growth mark is on its way · {days} days to go",
+    "emptyNoCountdown": "Your first growth mark is on its way",
+    "close": "Close",
+    "caption": {
+      "7days": "7 days together 🌿",
+      "30days": "30 days together 🌿",
+      "90days": "90 days together 🌿",
+      "180days": "180 days together 🌿",
+      "365days": "365 days together 🌿"
+    },
+    "event": {
+      "firstPhoto": "The day we met",
+      "lastPhoto": "How you look today",
+      "newLeaf": "A new leaf 🌿",
+      "blooming": "Blooming 🌸",
+      "sick": "Looking unwell ⚠️",
+      "lookingBeautiful": "Looking beautiful 💚",
+      "repot": "A new home 🪴",
+      "fertilize": "Got some food 🌱",
+      "prune": "A little trim ✂️"
+    },
+    "stats": {
+      "water": "{n} waterings",
+      "newLeaf": "{n} new leaves",
+      "blooming": "bloomed {n} times",
+      "maintenance": "{n} care actions"
+    }
+  },
+  "actions": {
+    "water": "💧 Water",
+    "fertilize": "🌱 Fertilize",
+    "repot": "🪴 Repot",
+    "prune": "✂️ Prune",
+    "bringHome": "🏠 Brought home"
+  },
+  "states": {
+    "newLeaf": "🌿 New leaf",
+    "blooming": "🌸 Blooming",
+    "sick": "⚠️ Sick",
+    "lookingBeautiful": "💚 Looking beautiful"
+  },
+  "localeSwitcher": {
+    "en": "EN",
+    "ja": "JA",
+    "zh": "中文",
+    "label": "Language"
+  }
+}

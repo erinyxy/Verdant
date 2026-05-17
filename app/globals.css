@@ -1,26 +1,54 @@
 @import "tailwindcss";
 
+/* ─────────────────────────────────────────
+   Verdant Brand Tokens
+   设计基准：concept-1-refined / 色彩基准.txt
+   ───────────────────────────────────────── */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* 主品牌色 */
+  --brand-sage: #77826e;       /* app icon 底色 / 主按钮 / active tab */
+  --pale-sage: #e6ede3;        /* pill 底色 / hover 背景 / 小标签 */
+
+  /* 背景 */
+  --warm-ivory: #f5f0ea;       /* app 主背景 / splash / 品牌展示板 */
+  --bg-card: #fdfaf6;          /* 卡片内层背景 */
+
+  /* 文字 */
+  --charcoal: #2e2e2b;         /* 标题 / 植物名 / 主正文 */
+  --soft-gray: #9a9690;        /* 日期 / 说明文字 / 辅助标签 */
+  --text-muted: #b8b3ad;       /* 占位符 / 最弱提示 */
+
+  /* 线条 */
+  --line: #e6e0d8;             /* 卡片分割线 / timeline 线 / 轻边框 */
 }
 
+/* Tailwind v4 主题注册：让 bg-brand-sage、text-charcoal 等 class 可用 */
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-brand-sage: var(--brand-sage);
+  --color-pale-sage: var(--pale-sage);
+  --color-warm-ivory: var(--warm-ivory);
+  --color-card: var(--bg-card);
+  --color-charcoal: var(--charcoal);
+  --color-soft-gray: var(--soft-gray);
+  --color-muted: var(--text-muted);
+  --color-line: var(--line);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
 }
 
+html,
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  height: 100%;
+  background-color: var(--warm-ivory);
+  color: var(--charcoal);
+  font-family: -apple-system, "Inter", "Helvetica Neue", Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Prevent overscroll bounce feel on iOS */
+body {
+  overscroll-behavior: none;
 }

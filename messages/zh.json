@@ -1,0 +1,143 @@
+{
+  "nav": {
+    "home": "首页",
+    "garden": "我的花园",
+    "milestones": "大事记"
+  },
+  "garden": {
+    "title": "我的花园",
+    "subtitle": "我的绿色小世界",
+    "addPlant": "新增",
+    "daysCount": "{n} 天了 🌱",
+    "noLastRecord": "还没有记录",
+    "emptyTitle": "花园在等你",
+    "emptyCta": "添加第一株植物",
+    "pastAction": {
+      "water": "💧 浇水",
+      "fertilize": "🌱 施肥",
+      "repot": "🪴 换盆",
+      "prune": "✂️ 修剪",
+      "bringHome": "🏠 新来了"
+    },
+    "pastState": {
+      "newLeaf": "🌿 长了新叶",
+      "blooming": "🌸 开花了",
+      "sick": "⚠️ 状态不好",
+      "lookingBeautiful": "💚 状态很好"
+    }
+  },
+  "home": {
+    "title": "和寂静的朋友\n待一会儿",
+    "recentActivity": "最近动态",
+    "growthLookback": "成长回看",
+    "myPlants": "我的植物",
+    "addPlant": "新增成员",
+    "recordButton": "+ 记录",
+    "daysAgo": "{days}天前",
+    "today": "今天",
+    "sevenDaysAgo": "7天前",
+    "thirtyDaysAgo": "30天前",
+    "firstDay": "第一天",
+    "growthSummary": "一点一点，在长呢 🌿",
+    "viewDetail": "详情",
+    "emptyRecent": "正在悄悄积攒回忆…",
+    "emptyPlants": "你的植物们会在这里相聚",
+    "viewAll": "查看全部"
+  },
+  "record": {
+    "title": "快速记录",
+    "selectPlant": "选择植物",
+    "action": "动作",
+    "state": "状态",
+    "photo": "照片",
+    "addPhoto": "添加照片",
+    "note": "备注",
+    "notePlaceholder": "可选备注…",
+    "save": "保存",
+    "water": "浇水",
+    "fertilize": "施肥",
+    "repot": "换盆",
+    "prune": "修剪",
+    "newLeaf": "长新叶",
+    "blooming": "开花",
+    "sick": "生病",
+    "lookingBeautiful": "状态很好",
+    "date": "日期",
+    "saved": "已保存 ✓",
+    "comingSoon": "记录页 — 即将上线",
+    "bringHome": "新来了"
+  },
+  "plantDetail": {
+    "startedOn": "开始养",
+    "recordButton": "+ 记录",
+    "growthCompare": "成长对比",
+    "timeline": "时间线",
+    "noRecords": "还没有记录",
+    "growthSummary": "最近有明显变化",
+    "memoryAccumulating": "还在积累记忆中…"
+  },
+  "newcomer": {
+    "title": "新增植物",
+    "uploadPhoto": "上传照片",
+    "plantName": "植物名称",
+    "plantNamePlaceholder": "如：龟背竹",
+    "nickname": "昵称",
+    "nicknamePlaceholder": "可不填",
+    "startedOn": "开始养的时间",
+    "save": "保存",
+    "nameRequired": "植物名称为必填项"
+  },
+  "marks": {
+    "title": "生长大事记",
+    "subtitle": "一些想留下的时刻",
+    "milestoneLabel": "{n} 天",
+    "dayLabel": "第 {n} 天",
+    "tagline": "一点一点，在长呢 🌿",
+    "empty": "第一枚生长大事记还在路上 · 再过 {days} 天",
+    "emptyNoCountdown": "第一枚生长大事记还在路上",
+    "close": "关闭",
+    "caption": {
+      "7days": "和你一起，7 天 🌿",
+      "30days": "和你一起，30 天 🌿",
+      "90days": "和你一起，90 天 🌿",
+      "180days": "和你一起，180 天 🌿",
+      "365days": "和你一起，365 天 🌿"
+    },
+    "event": {
+      "firstPhoto": "第一次见到你",
+      "lastPhoto": "你今天的样子",
+      "newLeaf": "长出了新叶 🌿",
+      "blooming": "开花了 🌸",
+      "sick": "状态不太好 ⚠️",
+      "lookingBeautiful": "真好看 💚",
+      "repot": "换了新家 🪴",
+      "fertilize": "加了点养分 🌱",
+      "prune": "修剪了一下 ✂️"
+    },
+    "stats": {
+      "water": "浇水 {n} 次",
+      "newLeaf": "长了 {n} 片新叶",
+      "blooming": "开花 {n} 次",
+      "maintenance": "维护 {n} 次"
+    }
+  },
+  "actions": {
+    "water": "💧 浇水",
+    "fertilize": "🌱 施肥",
+    "repot": "🪴 换盆",
+    "prune": "✂️ 修剪",
+    "bringHome": "🏠 新来了"
+  },
+  "states": {
+    "newLeaf": "🌿 长新叶",
+    "blooming": "🌸 开花",
+    "sick": "⚠️ 生病",
+    "lookingBeautiful": "💚 状态很好"
+  },
+  "localeSwitcher": {
+    "en": "EN",
+    "ja": "日语",
+    "zh": "中文",
+    "label": "语言"
+  }
+}

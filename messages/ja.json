@@ -1,0 +1,143 @@
+{
+  "nav": {
+    "home": "ホーム",
+    "garden": "マイガーデン",
+    "milestones": "小さな記念"
+  },
+  "garden": {
+    "title": "マイガーデン",
+    "subtitle": "私の小さな緑の世界",
+    "addPlant": "追加",
+    "daysCount": "{n}日、一緒に 🌿",
+    "noLastRecord": "まだ記録なし",
+    "emptyTitle": "庭をはじめよう",
+    "emptyCta": "最初の植物を追加",
+    "pastAction": {
+      "water": "💧 水やり",
+      "fertilize": "🌱 肥料をあげた",
+      "repot": "🪴 植え替えした",
+      "prune": "✂️ 剪定した",
+      "bringHome": "🏠 迎えた"
+    },
+    "pastState": {
+      "newLeaf": "🌿 新しい葉が出た",
+      "blooming": "🌸 花が咲いた",
+      "sick": "⚠️ 元気がない",
+      "lookingBeautiful": "💚 元気いっぱい"
+    }
+  },
+  "home": {
+    "title": "植物と、少しだけ",
+    "recentActivity": "最近の出来事",
+    "growthLookback": "成長の振り返り",
+    "myPlants": "私の植物",
+    "addPlant": "新しい植物を追加",
+    "recordButton": "+ 記録する",
+    "daysAgo": "{days}日前",
+    "today": "今日",
+    "sevenDaysAgo": "7日前",
+    "thirtyDaysAgo": "30日前",
+    "firstDay": "最初の日",
+    "growthSummary": "今日も、少しずつ 🌿",
+    "viewDetail": "詳細",
+    "emptyRecent": "そっと思い出を積み重ねています…",
+    "emptyPlants": "あなたの植物たちがここに並びます",
+    "viewAll": "すべて見る"
+  },
+  "record": {
+    "title": "サクッと記録",
+    "selectPlant": "植物を選ぶ",
+    "action": "お世話",
+    "state": "状態",
+    "photo": "写真",
+    "addPhoto": "写真を追加",
+    "note": "メモ",
+    "notePlaceholder": "任意のメモ…",
+    "save": "保存",
+    "water": "水やり",
+    "fertilize": "肥料",
+    "repot": "植え替え",
+    "prune": "剪定",
+    "newLeaf": "新葉",
+    "blooming": "開花",
+    "sick": "不調",
+    "lookingBeautiful": "元気いっぱい",
+    "date": "いつ",
+    "saved": "保存しました ✓",
+    "comingSoon": "記録ページ — もうすぐ登場",
+    "bringHome": "迎えた"
+  },
+  "plantDetail": {
+    "startedOn": "育て始め",
+    "recordButton": "+ 記録する",
+    "growthCompare": "成長比較",
+    "timeline": "タイムライン",
+    "noRecords": "まだ記録がありません",
+    "growthSummary": "最近、明らかな変化があります",
+    "memoryAccumulating": "思い出を積み重ね中…"
+  },
+  "newcomer": {
+    "title": "新しい植物を追加",
+    "uploadPhoto": "写真をアップロード",
+    "plantName": "植物の名前",
+    "plantNamePlaceholder": "例：モンステラ",
+    "nickname": "ニックネーム",
+    "nicknamePlaceholder": "任意",
+    "startedOn": "育て始めた日",
+    "save": "保存",
+    "nameRequired": "植物の名前は必須です"
+  },
+  "marks": {
+    "title": "成長の印",
+    "subtitle": "残しておきたい、いくつかの瞬間",
+    "milestoneLabel": "{n} 日",
+    "dayLabel": "{n} 日目",
+    "tagline": "今日も、少しずつ 🌿",
+    "empty": "最初の記念はもうすぐ · あと {days} 日",
+    "emptyNoCountdown": "最初の記念はもうすぐ",
+    "close": "閉じる",
+    "caption": {
+      "7days": "いっしょに 7 日 🌿",
+      "30days": "いっしょに 30 日 🌿",
+      "90days": "いっしょに 90 日 🌿",
+      "180days": "いっしょに 180 日 🌿",
+      "365days": "いっしょに 365 日 🌿"
+    },
+    "event": {
+      "firstPhoto": "はじめて出会った日",
+      "lastPhoto": "今日のあなた",
+      "newLeaf": "新しい葉が出た 🌿",
+      "blooming": "花が咲いた 🌸",
+      "sick": "ちょっと元気がない ⚠️",
+      "lookingBeautiful": "きれいだね 💚",
+      "repot": "新しいお家 🪴",
+      "fertilize": "栄養をあげた 🌱",
+      "prune": "少し整えた ✂️"
+    },
+    "stats": {
+      "water": "水やり {n} 回",
+      "newLeaf": "新しい葉 {n} 枚",
+      "blooming": "{n} 回咲いた",
+      "maintenance": "お手入れ {n} 回"
+    }
+  },
+  "actions": {
+    "water": "💧 水やり",
+    "fertilize": "🌱 肥料",
+    "repot": "🪴 植え替え",
+    "prune": "✂️ 剪定",
+    "bringHome": "🏠 迎えた"
+  },
+  "states": {
+    "newLeaf": "🌿 新葉",
+    "blooming": "🌸 開花",
+    "sick": "⚠️ 不調",
+    "lookingBeautiful": "💚 元気いっぱい"
+  },
+  "localeSwitcher": {
+    "en": "EN",
+    "ja": "日本語",
+    "zh": "中文",
+    "label": "言語"
+  }
+}

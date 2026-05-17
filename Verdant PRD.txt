@@ -1,0 +1,273 @@
+请帮我构建一个可运行的移动端 Web App Demo，名字叫 Verdant。
+这是一个植物成长记录工具。  A Plant memory journal。它不是效率工具，也不是提醒软件，而是一个围绕“植物成长记忆”的记录体验。
+核心价值：帮助用户通过记录植物日常变化（浇水、长新叶、换盆、拍照），看到植物随时间成长的过程，便捷清晰掌握植物的生长状态变化，并获得一种温柔的陪伴感。
+产品关键词：
+- Plant Memory Journal
+- Growth over time
+- Quiet, warm, reflective
+- Gentle interaction
+- Visual storytelling
+
+---
+
+# 技术要求
+请构建：
+- Next.js
+- TailwindCSS
+- Mobile-first
+- LocalStorage 存储（不要数据库）
+- 可直接部署到 Vercel
+- 使用 mock 图片和 mock 数据初始化
+
+不要实现：
+- 登录注册
+- 云同步
+- 分享
+- 社交
+- 后端 API
+- AI识别
+- 推送通知
+这是纯前端 demo。
+
+---
+
+# 产品结构
+
+包含 5 个页面：
+1. 首页 Home
+2. 记录页 Record
+3. 植物详情页 Plant Detail
+4. 新增植物详情页 newcomer
+5. Memory 回顾页
+
+底部 tab navigation：
+- Home
+- Record
+- Memories
+
+---
+
+# 首页
+顶部标题：
+🌱 植物们的新动态
+
+模块：
+## 最近动态
+展示最近记录：
+- 💧 三色堇浇水（3天前）
+- 🌿 橡皮树长新叶
+- 🪴 蓝眼菊换盆
+
+每条记录一侧加“植物详情”入口，点击进入该植物详情页
+
+---
+## 成长回看（重点模块）
+双图对比：
+Today vs 7 days ago
+自动总结：
+“最近悄悄长大了一点 🌿”
+
+点击该植物名称进入详情页
+
+---
+
+## 我的植物
+“新增成员”按钮在板块标题旁，点击进入新增植物页面 
+卡片列表：
+- 植物照片
+- 植物名称/昵称
+- 最近状态描述
+---
+
+右下悬浮按钮：
+＋ Record
+
+---
+
+# 记录页
+极简快速记录体验
+把已有植物列表做成类似图书馆标签卡片形式，点击标签后，进行记录操作
+
+字段：
+选择植物
+Action：
+- 💧 Water
+- 🌱 Fertilize
+- 🪴 Repot
+- ✂️ Prune
+
+State：
+
+- 🌿 New leaf
+- 🌸 Blooming
+- ⚠️ Sick
+- 💚 Looking beautiful
+（Action 和 State区域的按钮/标签，风格统一的基础上有所区别）
+Photo upload
+Optional note
+
+Save
+
+保存后写入时间线
+交互要非常轻量，像记录日记，不像填表。
+所有上传的图片在保证手机端清晰度的情况下，限定大小以及进行压缩。
+---
+
+# 植物详情页
+顶部：
+大图
+植物名称
+植物昵称（字段为空则不显示）
+开始养的时间（字段为空则不显示）
+状态标签
+右下悬浮按钮：
+＋ Record
+
+---
+
+## 成长对比（重点）
+
+左右双图：
+Today vs 7 days ago
+
+右图点击时间可切换：
+- 7 days
+- 30 days
+- First day
+
+自动生成描述：
+“最近有明显变化”
+
+---
+
+## 时间线
+倒序展示：
+日期
+事件
+图片（可选）
+
+像翻植物日记
+右下悬浮按钮：
+＋ Record
+—
+
+不要做复杂数据分析
+不要图表
+不要 dashboard 感
+
+—
+# 新增植物详情页 newcomer
+顶部：
+空图占位
+Photo upload按钮上传图片
+植物名称（必填）
+植物昵称（可不填）
+开始养的时间（可不填）
+
+Save按钮
+保存后跳转植物详情页
+—
+# Memory 页面（重点）
+自动生成成长纪念卡片
+示例：
+Monstera
+30 Days
+[Day 1] → [Today]
+✨ Grew 2 new leaves
+
+💧 Watered 5 times
+
+文案：
+“30 days with this plant 🌿”
+
+设计要像纪念卡片，而不是统计卡片。
+
+---
+
+# UI设计风格（非常重要）
+风格：Light Journal Style
+
+要求：
+80% clean  
+20% handmade warmth
+
+感觉：
+- 安静
+- 留白
+- 柔和
+- 像纸
+- 有呼吸感
+- 高级植物馆展签感
+
+不要：
+- SaaS dashboard 风
+- Notion clone
+- Material Design app 感
+- 强科技感
+
+---
+
+# 配色
+背景：暖米白 / 纸张色
+
+辅助：浅绿色 灰绿色 淡棕色
+阴影非常轻 像卡片贴在纸面
+
+---
+
+# 字体
+现代无衬线为主 少量手写点缀
+
+---
+
+# 图标
+线条感
+轻微手绘感
+
+---
+
+# 动效
+非常克制
+柔和淡入
+轻微位移
+不要夸张动画
+
+---
+
+# Mock 数据
+初始化三株植物：
+
+1. 三色堇
+2. 橡皮树
+3. 蓝眼菊
+
+每株生成：
+
+- 多条历史记录
+- 多张照片
+- 可对比时间点
+- 可生成 memory card
+
+---
+PWA-like support:
+
+- Add installable web app manifest
+- Provide app icon (192x192 and 512x512)
+- Support “Add to Home Screen” on iPhone Safari
+- Standalone app display (no browser chrome)
+- Include Apple touch icon support
+- Launch like a native minimal app
+
+
+# 输出要求
+1. 完整项目结构
+2. 所有代码文件
+3. 可运行
+4. 本地启动方式
+5. Vercel 部署步骤
+
+优先确保：
+视觉完成度高  
+移动端自然  
+交互温柔  
+体验像产品，而不是学生 demo
