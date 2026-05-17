@@ -385,8 +385,8 @@ function buildMark(
     }
   }
 
-  // water deliberately excluded — only counted in stats.
-  const actionTypes: ActionType[] = ["repot", "fertilize", "prune"];
+  // water and bringHome deliberately excluded — only counted in stats.
+  const actionTypes: GrowthMarkEventType[] = ["repot", "fertilize", "prune"];
   for (const a of actionTypes) {
     const earliest = [...periodRecords].reverse().find((r) => r.actions.includes(a));
     if (earliest) {
