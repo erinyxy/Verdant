@@ -374,7 +374,9 @@
     <p>填写你的真实植物数据，导出 JSON 后发给 Claude 生成正式 demo</p>
   </div>
   <div style="display:flex;gap:10px;align-items:center;">
+    <span id="saveStatus" style="font-size:12px;color:var(--accent);opacity:0;transition:opacity 0.4s"></span>
     <span id="statsLabel" style="font-size:13px;color:var(--text-muted)"></span>
+    <button class="btn btn-outline btn-sm" onclick="clearLocal()" style="color:var(--text-muted);border-color:var(--border)">清空重来</button>
     <button class="btn btn-outline" onclick="addPlant()">＋ 新增植物</button>
     <button class="btn btn-primary" onclick="exportData()">⬇ 导出 JSON</button>
   </div>
@@ -876,10 +878,70 @@ function exportData() {
 }
 
 // ══════════════════════════════════════════════════
+//  Auto-save to localStorage
+// ══════════════════════════════════════════════════
+
+const LS_KEY = 'verdant-demo-builder-v1';
+let _saveTimer = null;
+
+function scheduleSave() {
+  clearTimeout(_saveTimer);
+  _saveTimer = setTimeout(saveToLocal, 800);
+}
+
+function saveToLocal() {
+  try {
+    localStorage.setItem(LS_KEY, JSON.stringify(state));
+    showSaveStatus('已自动保存 ✓');
+  } catch (err) {
+    showSaveStatus('⚠️ 保存失败（存储空间不足）');
+  }
+}
+
+function loadFromLocal() {
+  try {
+    const raw = localStorage.getItem(LS_KEY);
+    if (!raw) return false;
+    const saved = JSON.parse(raw);
+    if (saved && Array.isArray(saved.plants) && saved.plants.length > 0) {
+      state = saved;
+      return true;
+    }
+  } catch (e) {}
+  return false;
+}
+
+function clearLocal() {
+  if (!confirm('确认清空所有已保存的数据？此操作不可撤销。')) return;
+  localStorage.removeItem(LS_KEY);
+  state = { plants: [], activePlantId: null };
+  renderAll();
+  toast('已清空所有数据');
+}
+
+function showSaveStatus(msg) {
+  const el = document.getElementById('saveStatus');
+  if (el) { el.textContent = msg; el.style.opacity = '1'; }
+  clearTimeout(showSaveStatus._t);
+  showSaveStatus._t = setTimeout(() => { if (el) el.style.opacity = '0'; }, 3000);
+}
+
+// Patch renderAll to also trigger save
+const _origRenderAll = renderAll;
+function renderAll() {
+  _origRenderAll();
+  scheduleSave();
+}
+
+// ══════════════════════════════════════════════════
 //  Init
 // ══════════════════════════════════════════════════
 
+const hadSavedData = loadFromLocal();
 renderAll();
+if (hadSavedData) {
+  setTimeout(() => toast(`✅ 已恢复上次进度：${state.plants.length} 株植物`), 300);
+}
 </script>
 </body>
 </html>
