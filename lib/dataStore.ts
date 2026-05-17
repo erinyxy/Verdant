@@ -386,7 +386,9 @@ function buildMark(
   }
 
   // water and bringHome deliberately excluded — only counted in stats.
-  const actionTypes: GrowthMarkEventType[] = ["repot", "fertilize", "prune"];
+  // `as const` narrows to literal types so `a` is both a valid ActionType (for
+  // .includes) and a valid GrowthMarkEventType (for event.type assignment).
+  const actionTypes = ["repot", "fertilize", "prune"] as const;
   for (const a of actionTypes) {
     const earliest = [...periodRecords].reverse().find((r) => r.actions.includes(a));
     if (earliest) {
