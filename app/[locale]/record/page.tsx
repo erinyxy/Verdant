@@ -198,7 +198,7 @@ function RecordForm() {
         </p>
 
         {plantsLoading ? (
-          <div className="flex gap-3 overflow-x-auto pb-1">
+          <div className="flex gap-3 overflow-x-auto py-2 px-1.5">
             {[1, 2, 3].map((i) => (
               <div
                 key={i}
@@ -212,7 +212,7 @@ function RecordForm() {
             No plants yet — add one first!
           </p>
         ) : (
-          <div className="flex gap-3 overflow-x-auto py-1.5 px-0.5">
+          <div className="flex gap-3 overflow-x-auto py-2 px-1.5">
             {plants.map((plant) => {
               const isSelected = plant.id === selectedPlantId;
               return (
