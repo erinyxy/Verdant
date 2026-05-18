@@ -16,7 +16,14 @@ import { openDB, type IDBPDatabase } from "idb";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-export type ActionType = "water" | "fertilize" | "repot" | "prune" | "bringHome" | "sow";
+export type ActionType =
+  | "water"
+  | "fertilize"
+  | "repot"
+  | "prune"
+  | "bringHome"
+  | "sow"
+  | "sayGoodbye";
 export type StateType = "newLeaf" | "blooming" | "sick" | "lookingBeautiful";
 
 export interface Plant {
@@ -24,6 +31,11 @@ export interface Plant {
   name: string;
   nickname?: string;
   startedOn?: string; // ISO date string, e.g. "2025-01-15"
+  /** Set when the plant has departed (annual died, gifted away, etc.).
+      ISO 8601 string. When present, the plant is "past" — frozen at this
+      point in time. Reconciled from sayGoodbye timeline entries; deleting
+      the last sayGoodbye entry clears this and revives the plant. */
+  endedAt?: string;
   coverPhotoId?: string; // references a photo in IndexedDB
   createdAt: string; // ISO 8601
   updatedAt: string;
@@ -217,21 +229,46 @@ export async function getRecordsByMonth(
   return getRecordsBetween(start, end);
 }
 
+/** Recompute plant.endedAt from its sayGoodbye timeline entries.
+ *  - If any sayGoodbye entries exist, endedAt = earliest one's timestamp
+ *  - If none exist, endedAt is cleared (plant "revives")
+ *  Idempotent. Called after any timeline mutation on a plant. */
+function reconcilePlantEndedAt(plantId: string): void {
+  const plants = loadPlants();
+  const idx = plants.findIndex((p) => p.id === plantId);
+  if (idx === -1) return;
+
+  const goodbyes = loadTimeline()
+    .filter((e) => e.plantId === plantId && e.actions.includes("sayGoodbye"))
+    .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+  const newEndedAt = goodbyes[0]?.timestamp;
+
+  if (plants[idx].endedAt !== newEndedAt) {
+    plants[idx] = {
+      ...plants[idx],
+      endedAt: newEndedAt,
+      updatedAt: new Date().toISOString(),
+    };
+    savePlantsToLS(plants);
+  }
+}
+
 export async function saveRecord(
   data: Omit<TimelineEntry, "id"> & { id?: string }
 ): Promise<TimelineEntry> {
   const entries = loadTimeline();
   const now = data.timestamp ?? new Date().toISOString();
 
+  let saved: TimelineEntry;
   if (data.id) {
     const idx = entries.findIndex((e) => e.id === data.id);
     if (idx === -1) throw new Error(`Entry ${data.id} not found`);
     entries[idx] = { ...entries[idx], ...data };
     saveTimelineToLS(entries);
-    return entries[idx];
+    saved = entries[idx];
   } else {
-    const entry: TimelineEntry = { ...data, id: generateId(), timestamp: now };
-    entries.push(entry);
+    saved = { ...data, id: generateId(), timestamp: now };
+    entries.push(saved);
     saveTimelineToLS(entries);
 
     // bump plant updatedAt
@@ -241,19 +278,24 @@ export async function saveRecord(
       plants[idx].updatedAt = now;
       savePlantsToLS(plants);
     }
-
-    return entry;
   }
+
+  // Lifecycle: keep plant.endedAt in sync with sayGoodbye entries.
+  reconcilePlantEndedAt(saved.plantId);
+  return saved;
 }
 
 export async function deleteRecord(id: string): Promise<void> {
   const allEntries = loadTimeline();
   const target = allEntries.find((e) => e.id === id);
-  if (target && target.photoIds.length > 0) {
+  if (!target) return;
+  if (target.photoIds.length > 0) {
     const db = await getDB();
     await Promise.all(target.photoIds.map((pid) => db.delete("photos", pid)));
   }
   saveTimelineToLS(allEntries.filter((e) => e.id !== id));
+  // If a sayGoodbye entry just got removed, plant may revive.
+  reconcilePlantEndedAt(target.plantId);
 }
 
 export async function updateRecord(entry: {
@@ -274,6 +316,25 @@ export async function updateRecord(entry: {
     note: entry.note,
   };
   saveTimelineToLS(allEntries);
+  // Action set or timestamp may have changed — reconcile.
+  reconcilePlantEndedAt(allEntries[idx].plantId);
+}
+
+// ─── Plant lifecycle helpers ──────────────────────────────────────────────────
+
+/** Is the plant "past" (departed / no longer being cared for)? */
+export function isPast(plant: Plant): boolean {
+  return !!plant.endedAt;
+}
+
+/** Days the user has spent with this plant.
+ *  Active plants: today - startDate.
+ *  Past plants: endedAt - startDate (frozen).
+ *  Clamped to 0 if startDate is somehow after the end. */
+export function getTogetherDays(plant: Plant, records: TimelineEntry[] = []): number {
+  const start = getPlantStartDate(plant, records).getTime();
+  const end = plant.endedAt ? new Date(plant.endedAt).getTime() : Date.now();
+  return Math.max(0, Math.floor((end - start) / 86400000));
 }
 
 // ─── Photo API ────────────────────────────────────────────────────────────────
@@ -499,7 +560,10 @@ export async function syncMarks(): Promise<GrowthMark[]> {
     const photos = await getPhotosByPlant(plant.id);
     const startDate = getPlantStartDate(plant, records);
     const startMs = startDate.getTime();
-    const daysTogether = Math.floor((Date.now() - startMs) / 86400000);
+    // Past plants freeze daysTogether at endedAt; new milestones can't trigger
+    // beyond that point.
+    const effectiveNow = plant.endedAt ? new Date(plant.endedAt).getTime() : Date.now();
+    const daysTogether = Math.floor((effectiveNow - startMs) / 86400000);
 
     for (const ms of MILESTONES) {
       if (daysTogether < ms) continue;
@@ -538,6 +602,8 @@ export async function getDaysUntilFirstMilestone(): Promise<number | null> {
 
   let smallest: number | null = null;
   for (const plant of plants) {
+    // Past plants no longer count toward "first milestone is N days away".
+    if (plant.endedAt) continue;
     const records = await getRecordsByPlant(plant.id);
     const startDate = getPlantStartDate(plant, records);
     const daysTogether = Math.floor((Date.now() - startDate.getTime()) / 86400000);

@@ -18,14 +18,17 @@
       "repot": "🪴 换盆",
       "prune": "✂️ 修剪",
       "bringHome": "🏠 新来了",
-      "sow": "🌾 播种/扦插了"
+      "sow": "🌾 播种/扦插了",
+      "sayGoodbye": "🍂 告别了"
     },
     "pastState": {
       "newLeaf": "🌿 长了新叶",
       "blooming": "🌸 开花了",
       "sick": "⚠️ 状态不好",
       "lookingBeautiful": "💚 你今天很好看"
-    }
+    },
+    "onceTogetherTitle": "曾经陪伴过的植物",
+    "onceTogetherDays": "一起走过 {n} 天"
   },
   "home": {
     "title": "和寂静的朋友\n待一会儿",
@@ -85,6 +88,10 @@
     "editCover": "更换头像",
     "chooseCover": "选择一张作为头像",
     "noPhotosYet": "还没有照片",
+    "plantActionsLabel": "植物操作",
+    "sayGoodbye": "告别…",
+    "sayGoodbyeConfirm": "和 {name} 告别？所有照片和记录都会保留下来。如果想恢复，把这条告别记录删掉就行。",
+    "daysTogether": "一起走过 {n} 天",
     "save": "保存",
     "cancel": "取消"
   },
@@ -139,7 +146,8 @@
     "repot": "🪴 换盆",
     "prune": "✂️ 修剪",
     "bringHome": "🏠 新来了",
-    "sow": "🌾 播种/扦插"
+    "sow": "🌾 播种/扦插",
+    "sayGoodbye": "🍂 告别了"
   },
   "states": {
     "newLeaf": "🌿 长新叶",

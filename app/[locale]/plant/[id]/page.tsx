@@ -24,8 +24,10 @@ import {
   type StateType,
   deleteRecord,
   updateRecord,
+  saveRecord,
   getPhotosByPlant,
   getPhotoNearDate,
+  getTogetherDays,
 } from "@/lib/dataStore";
 
 // ─── Types & helpers ──────────────────────────────────────────────────────────
@@ -39,6 +41,7 @@ const ACTION_EMOJI: Record<ActionType, string> = {
   prune: "✂️",
   bringHome: "🏠",
   sow: "🌾",
+  sayGoodbye: "🍂",
 };
 const STATE_EMOJI: Record<StateType, string> = {
   newLeaf: "🌿",
@@ -191,11 +194,15 @@ function TimelineCard({
   locale,
   onDeleted,
   onUpdated,
+  plantStartedOn,
 }: {
   entry: TimelineEntry;
   locale: string;
   onDeleted: () => void;
   onUpdated: () => void;
+  /** Plant's startedOn (or createdAt fallback). Used to render the
+   *  "X days together" caption on sayGoodbye entries. */
+  plantStartedOn?: string;
 }) {
   const tActions = useTranslations("actions");
   const tStates = useTranslations("states");
@@ -463,6 +470,24 @@ function TimelineCard({
             </div>
           </div>
 
+          {/* "X days together" caption on a sayGoodbye entry — soft, italic,
+              like a quiet closing line in a diary. */}
+          {entry.actions.includes("sayGoodbye") && plantStartedOn && (() => {
+            const start = new Date(plantStartedOn + "T00:00:00").getTime();
+            const days = Math.max(0, Math.floor((new Date(entry.timestamp).getTime() - start) / 86400000));
+            return (
+              <p
+                className={[
+                  "text-xs mb-1.5",
+                  locale === "zh" ? "" : "italic",
+                ].join(" ")}
+                style={{ color: "#7a7570" }}
+              >
+                {tPlantDetail("daysTogether", { n: days })}
+              </p>
+            );
+          })()}
+
           {/* Note */}
           {entry.note && (
             <p className="text-xs italic mb-1.5" style={{ color: "#7a7570" }}>
@@ -500,6 +525,30 @@ export default function PlantDetailPage({
 
   const { plant, loading: plantLoading, reload: reloadPlant } = usePlant(id);
   const [coverPickerOpen, setCoverPickerOpen] = useState(false);
+  const [plantMenuOpen, setPlantMenuOpen] = useState(false);
+  const [endingPlant, setEndingPlant] = useState(false);
+  const plantMenuRef = useRef<HTMLDivElement>(null);
+
+  // Outside-click / Escape closes the plant 3-dot menu.
+  useEffect(() => {
+    if (!plantMenuOpen) return;
+    function onPointer(e: MouseEvent | TouchEvent) {
+      if (plantMenuRef.current && !plantMenuRef.current.contains(e.target as Node)) {
+        setPlantMenuOpen(false);
+      }
+    }
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") setPlantMenuOpen(false);
+    }
+    document.addEventListener("mousedown", onPointer);
+    document.addEventListener("touchstart", onPointer);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onPointer);
+      document.removeEventListener("touchstart", onPointer);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [plantMenuOpen]);
   const { entries, loading: timelineLoading, reload: reloadTimeline } = useTimeline(id);
 
   if (plantLoading) {
@@ -569,20 +618,101 @@ export default function PlantDetailPage({
       )}
 
       <div className="px-5 pt-5">
-        {/* Plant name + nickname */}
-        <h1 className="text-2xl mb-0.5" style={{ color: "#2c2c2c", fontFamily: "var(--font-manrope), sans-serif", fontWeight: 500 }}>
-          {plant.name}
-          {plant.nickname && (
-            <span className="ml-2 text-base font-normal" style={{ color: "#8fad8f" }}>
-              {plant.nickname}
-            </span>
-          )}
-        </h1>
+        {/* Plant name + 3-dot menu (active plants only).
+            Past plants are read-only and have no actions; the only way to
+            revive them is to delete the sayGoodbye timeline entry. */}
+        <div className="flex items-start justify-between gap-3 mb-0.5">
+          <h1
+            className="text-2xl flex-1 min-w-0"
+            style={{
+              color: "#2c2c2c",
+              fontFamily: "var(--font-manrope), sans-serif",
+              fontWeight: 500,
+            }}
+          >
+            {plant.name}
+            {plant.nickname && (
+              <span className="ml-2 text-base font-normal" style={{ color: "#8fad8f" }}>
+                {plant.nickname}
+              </span>
+            )}
+          </h1>
 
-        {/* Started on */}
+          {!plant.endedAt && (
+            <div ref={plantMenuRef} className="relative flex-shrink-0 -mr-1 mt-1">
+              <button
+                type="button"
+                onClick={() => setPlantMenuOpen((v) => !v)}
+                aria-label={t("plantActionsLabel")}
+                aria-haspopup="menu"
+                aria-expanded={plantMenuOpen}
+                disabled={endingPlant}
+                className="flex items-center justify-center w-8 h-8 rounded-full transition-opacity active:opacity-50"
+                style={{ color: "#9a948e" }}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                  <circle cx="5" cy="12" r="1.8" />
+                  <circle cx="12" cy="12" r="1.8" />
+                  <circle cx="19" cy="12" r="1.8" />
+                </svg>
+              </button>
+
+              {plantMenuOpen && (
+                <div
+                  role="menu"
+                  className="absolute right-0 mt-1 z-20 rounded-xl overflow-hidden"
+                  style={{
+                    background: "#fdfaf6",
+                    boxShadow: "0 2px 12px rgba(0,0,0,0.10)",
+                    border: "1px solid rgba(0,0,0,0.05)",
+                    minWidth: 160,
+                  }}
+                >
+                  <button
+                    type="button"
+                    role="menuitem"
+                    onClick={async () => {
+                      setPlantMenuOpen(false);
+                      const msg = t("sayGoodbyeConfirm", { name: plant.nickname || plant.name });
+                      if (!window.confirm(msg)) return;
+                      setEndingPlant(true);
+                      try {
+                        // Today's date at local noon (matches dateStrToTimestamp).
+                        const today = todayStr();
+                        await saveRecord({
+                          plantId: plant.id,
+                          timestamp: dateStrToTimestamp(today),
+                          actions: ["sayGoodbye"],
+                          states: [],
+                          photoIds: [],
+                        });
+                        await Promise.all([reloadTimeline(), reloadPlant()]);
+                      } finally {
+                        setEndingPlant(false);
+                      }
+                    }}
+                    className="block w-full text-left px-3 py-2 text-xs transition-colors hover:bg-black/[0.03]"
+                    style={{ color: "#3a3530" }}
+                  >
+                    🍂 {t("sayGoodbye")}
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Started on + (if past) frozen days-together */}
         {plant.startedOn && (
           <p className="text-sm mb-6" style={{ color: "#b0aba5" }}>
             {t("startedOn")} {formatDate(plant.startedOn, locale)}
+            {plant.endedAt && (
+              <span>
+                {" · "}
+                {t("daysTogether", { n: getTogetherDays(plant) })}
+                {" 🍂"}
+              </span>
+            )}
           </p>
         )}
 
@@ -610,8 +740,9 @@ export default function PlantDetailPage({
                   key={entry.id}
                   entry={entry}
                   locale={locale}
-                  onDeleted={reloadTimeline}
-                  onUpdated={reloadTimeline}
+                  onDeleted={() => { reloadTimeline(); reloadPlant(); }}
+                  onUpdated={() => { reloadTimeline(); reloadPlant(); }}
+                  plantStartedOn={plant.startedOn ?? plant.createdAt.slice(0, 10)}
                 />
               ))}
             </div>
@@ -619,17 +750,19 @@ export default function PlantDetailPage({
         </section>
       </div>
 
-      {/* FAB → Record page (with pre-selected plant) */}
-      <button
-        onClick={() => router.push(`/${locale}/record?plantId=${plant.id}`)}
-        className="fixed bottom-24 right-6 w-14 h-14 rounded-full shadow-lg flex items-center justify-center z-40 transition-transform active:scale-95"
-        style={{ background: "#8fad8f" }}
-        aria-label={t("recordButton")}
-      >
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round">
-          <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
-        </svg>
-      </button>
+      {/* FAB → Record page (hidden for past plants — they are read-only) */}
+      {!plant.endedAt && (
+        <button
+          onClick={() => router.push(`/${locale}/record?plantId=${plant.id}`)}
+          className="fixed bottom-24 right-6 w-14 h-14 rounded-full shadow-lg flex items-center justify-center z-40 transition-transform active:scale-95"
+          style={{ background: "#8fad8f" }}
+          aria-label={t("recordButton")}
+        >
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round">
+            <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
+          </svg>
+        </button>
+      )}
     </div>
   );
 }

@@ -18,14 +18,17 @@
       "repot": "🪴 植え替えした",
       "prune": "✂️ 剪定した",
       "bringHome": "🏠 迎えた",
-      "sow": "🌾 種まき/挿し木した"
+      "sow": "🌾 種まき/挿し木した",
+      "sayGoodbye": "🍂 お別れした"
     },
     "pastState": {
       "newLeaf": "🌿 新しい葉が出た",
       "blooming": "🌸 花が咲いた",
       "sick": "⚠️ 元気がない",
       "lookingBeautiful": "💚 元気いっぱい"
-    }
+    },
+    "onceTogetherTitle": "これまでの植物",
+    "onceTogetherDays": "一緒に過ごした {n} 日"
   },
   "home": {
     "title": "植物と、少しだけ",
@@ -85,6 +88,10 @@
     "editCover": "アバターを変更",
     "chooseCover": "アバターにする写真を選ぶ",
     "noPhotosYet": "まだ写真がありません",
+    "plantActionsLabel": "植物の操作",
+    "sayGoodbye": "お別れする…",
+    "sayGoodbyeConfirm": "{name} とお別れしますか？写真と記録はそのまま残ります。お別れの記録を削除すれば元に戻せます。",
+    "daysTogether": "一緒に過ごした {n} 日",
     "save": "保存",
     "cancel": "キャンセル"
   },
@@ -139,7 +146,8 @@
     "repot": "🪴 植え替え",
     "prune": "✂️ 剪定",
     "bringHome": "🏠 迎えた",
-    "sow": "🌾 種まき/挿し木"
+    "sow": "🌾 種まき/挿し木",
+    "sayGoodbye": "🍂 お別れした"
   },
   "states": {
     "newLeaf": "🌿 新葉",

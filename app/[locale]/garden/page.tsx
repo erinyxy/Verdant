@@ -14,20 +14,19 @@ import { useState, useEffect } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import Link from "next/link";
 import { usePlants } from "@/hooks/useDataStore";
-import { getRecordsByPlant, type Plant, type TimelineEntry } from "@/lib/dataStore";
+import { getRecordsByPlant, getTogetherDays, type Plant, type TimelineEntry } from "@/lib/dataStore";
 import PhotoFromStore from "@/components/PhotoFromStore";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-/** Days since the plant was first cared for. */
+/** Days the user has spent with this plant. Frozen for past plants (endedAt). */
 function companionDays(plant: Plant): number | null {
-  const base = plant.startedOn ?? plant.createdAt;
-  if (!base) return null;
-  return Math.max(0, Math.floor((Date.now() - new Date(base).getTime()) / 86_400_000));
+  if (!plant.startedOn && !plant.createdAt) return null;
+  return getTogetherDays(plant);
 }
 
 // pastAction / pastState key type helpers (garden namespace)
-type PastActionKey = `pastAction.${"water" | "fertilize" | "repot" | "prune" | "bringHome"}`;
+type PastActionKey = `pastAction.${"water" | "fertilize" | "repot" | "prune" | "bringHome" | "sow" | "sayGoodbye"}`;
 type PastStateKey = `pastState.${"newLeaf" | "blooming" | "sick" | "lookingBeautiful"}`;
 
 /** "今天" / "today" or "{n} days ago". */
@@ -111,19 +110,48 @@ export default function GardenPage() {
         <LoadingSkeletons />
       ) : plants.length === 0 ? (
         <EmptyState locale={locale} />
-      ) : (
-        <div className="space-y-3">
-          {rows.map(({ plant, days, latestEntry }) => (
-            <PlantCard
-              key={plant.id}
-              plant={plant}
-              days={days}
-              latestEntry={latestEntry}
-              locale={locale}
-            />
-          ))}
-        </div>
-      )}
+      ) : (() => {
+        const activeRows = rows.filter((r) => !r.plant.endedAt);
+        const pastRows = rows.filter((r) => r.plant.endedAt);
+        return (
+          <>
+            <div className="space-y-3">
+              {activeRows.map(({ plant, days, latestEntry }) => (
+                <PlantCard
+                  key={plant.id}
+                  plant={plant}
+                  days={days}
+                  latestEntry={latestEntry}
+                  locale={locale}
+                />
+              ))}
+            </div>
+
+            {pastRows.length > 0 && (
+              <section className="mt-10">
+                <h2
+                  className="text-xs uppercase tracking-widest mb-4 pl-1"
+                  style={{ color: "#9a948e" }}
+                >
+                  {t("onceTogetherTitle")}
+                </h2>
+                <div className="space-y-3">
+                  {pastRows.map(({ plant, days, latestEntry }) => (
+                    <PlantCard
+                      key={plant.id}
+                      plant={plant}
+                      days={days}
+                      latestEntry={latestEntry}
+                      locale={locale}
+                      isPast
+                    />
+                  ))}
+                </div>
+              </section>
+            )}
+          </>
+        );
+      })()}
     </div>
   );
 }
@@ -135,9 +163,10 @@ interface CardProps {
   days: number | null;
   latestEntry: TimelineEntry | null;
   locale: string;
+  isPast?: boolean;
 }
 
-function PlantCard({ plant, days, latestEntry, locale }: CardProps) {
+function PlantCard({ plant, days, latestEntry, locale, isPast = false }: CardProps) {
   const t = useTranslations("garden");
   const tHome = useTranslations("home");
 
@@ -168,11 +197,13 @@ function PlantCard({ plant, days, latestEntry, locale }: CardProps) {
       href={`/${locale}/plant/${plant.id}`}
       className="flex items-center gap-4 rounded-2xl px-4 py-4 transition-opacity active:opacity-70"
       style={{
-        background: "#fdfaf6",
-        boxShadow: "0 1px 8px rgba(0,0,0,0.04)",
+        // Past plants get a subtler card to recede behind active ones,
+        // but stay fully readable (this is still memory journal, not delete).
+        background: isPast ? "#f8f4ec" : "#fdfaf6",
+        boxShadow: isPast ? "0 1px 6px rgba(0,0,0,0.03)" : "0 1px 8px rgba(0,0,0,0.04)",
       }}
     >
-      {/* Circular avatar */}
+      {/* Circular avatar (slightly desaturated for past) */}
       <div
         className="flex-shrink-0 rounded-full overflow-hidden"
         style={{
@@ -180,6 +211,7 @@ function PlantCard({ plant, days, latestEntry, locale }: CardProps) {
           height: 68,
           border: "1.5px solid rgba(140,110,70,0.10)",
           background: "#efe9dd",
+          filter: isPast ? "saturate(0.55) brightness(0.97)" : undefined,
         }}
       >
         <PhotoFromStore
@@ -190,49 +222,59 @@ function PlantCard({ plant, days, latestEntry, locale }: CardProps) {
         />
       </div>
 
-      {/* Three-line info block */}
+      {/* Info block — fewer lines for past plants, no "last activity" noise */}
       <div className="flex-1 min-w-0">
-
-        {/* Line 1: Name — medium weight, dark */}
-        <p className="text-sm font-medium truncate" style={{ color: "#2c2c2c" }}>
+        <p className="text-sm font-medium truncate" style={{ color: isPast ? "#5a5550" : "#2c2c2c" }}>
           {displayName}
         </p>
 
-        {/* Line 2: Days together — small, grey-green, sentence feel */}
+        {/* Days together — frozen for past, with 🍂 hint */}
         {days !== null && (
           <p
             className="text-sm mt-1.5"
-            style={{ color: "#7A9A77", lineHeight: 1.4 }}
+            style={{
+              color: isPast ? "#9a948e" : "#7A9A77",
+              lineHeight: 1.4,
+            }}
           >
-            {t("daysCount", { n: days })}
+            {isPast ? (
+              <>
+                {t("onceTogetherDays", { n: days })}
+                <span style={{ marginLeft: 6 }}>🍂</span>
+              </>
+            ) : (
+              t("daysCount", { n: days })
+            )}
           </p>
         )}
 
-        {/* Line 3: Last activity — muted, wider spacing, · has room to breathe */}
-        <div className="mt-1.5">
-          {actLabel && timeLabel ? (
-            <p
-              className="text-xs flex items-center min-w-0"
-              style={{ color: "#b0aba5", letterSpacing: "0.04em" }}
-            >
-              <span className="truncate">{actLabel}</span>
-              <span
-                className="flex-shrink-0"
-                style={{ paddingInline: "6px", opacity: 0.55 }}
+        {/* Last activity — only for active plants (past plants are frozen) */}
+        {!isPast && (
+          <div className="mt-1.5">
+            {actLabel && timeLabel ? (
+              <p
+                className="text-xs flex items-center min-w-0"
+                style={{ color: "#b0aba5", letterSpacing: "0.04em" }}
               >
-                ·
-              </span>
-              <span className="flex-shrink-0 whitespace-nowrap">{timeLabel}</span>
-            </p>
-          ) : (
-            <p
-              className="text-xs"
-              style={{ color: "#d0cbc5", letterSpacing: "0.04em" }}
-            >
-              {t("noLastRecord")}
-            </p>
-          )}
-        </div>
+                <span className="truncate">{actLabel}</span>
+                <span
+                  className="flex-shrink-0"
+                  style={{ paddingInline: "6px", opacity: 0.55 }}
+                >
+                  ·
+                </span>
+                <span className="flex-shrink-0 whitespace-nowrap">{timeLabel}</span>
+              </p>
+            ) : (
+              <p
+                className="text-xs"
+                style={{ color: "#d0cbc5", letterSpacing: "0.04em" }}
+              >
+                {t("noLastRecord")}
+              </p>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Arrow */}
@@ -241,7 +283,7 @@ function PlantCard({ plant, days, latestEntry, locale }: CardProps) {
         height="16"
         viewBox="0 0 24 24"
         fill="none"
-        stroke="#c9c3bb"
+        stroke={isPast ? "#d4cec5" : "#c9c3bb"}
         strokeWidth="1.5"
         strokeLinecap="round"
         strokeLinejoin="round"

@@ -18,14 +18,17 @@
       "repot": "🪴 Repotted",
       "prune": "✂️ Pruned",
       "bringHome": "🏠 Brought home",
-      "sow": "🌾 Propagated"
+      "sow": "🌾 Propagated",
+      "sayGoodbye": "🍂 Said goodbye"
     },
     "pastState": {
       "newLeaf": "🌿 New leaf",
       "blooming": "🌸 Blooming",
       "sick": "⚠️ Feeling unwell",
       "lookingBeautiful": "💚 Looking beautiful"
-    }
+    },
+    "onceTogetherTitle": "Once together",
+    "onceTogetherDays": "{n} days together"
   },
   "home": {
     "title": "A moment\nwith your plants",
@@ -85,6 +88,10 @@
     "editCover": "Change cover photo",
     "chooseCover": "Choose a cover photo",
     "noPhotosYet": "No photos yet",
+    "plantActionsLabel": "Plant actions",
+    "sayGoodbye": "Say goodbye…",
+    "sayGoodbyeConfirm": "Mark {name} as gone? Their memories and records will still be here. You can revive them later by deleting the goodbye entry.",
+    "daysTogether": "{n} days together",
     "save": "Save",
     "cancel": "Cancel"
   },
@@ -139,7 +146,8 @@
     "repot": "🪴 Repot",
     "prune": "✂️ Prune",
     "bringHome": "🏠 Brought home",
-    "sow": "🌾 Sow / Propagate"
+    "sow": "🌾 Sow / Propagate",
+    "sayGoodbye": "🍂 Said goodbye"
   },
   "states": {
     "newLeaf": "🌿 New leaf",
