@@ -17,6 +17,7 @@ import { useRouter } from "next/navigation";
 import { usePlant, useTimeline } from "@/hooks/useDataStore";
 import PhotoFromStore from "@/components/PhotoFromStore";
 import PhotoCompare from "@/components/PhotoCompare";
+import CoverPhotoPicker from "@/components/CoverPhotoPicker";
 import {
   type TimelineEntry,
   type ActionType,
@@ -497,7 +498,8 @@ export default function PlantDetailPage({
   const router = useRouter();
   const t = useTranslations("plantDetail");
 
-  const { plant, loading: plantLoading } = usePlant(id);
+  const { plant, loading: plantLoading, reload: reloadPlant } = usePlant(id);
+  const [coverPickerOpen, setCoverPickerOpen] = useState(false);
   const { entries, loading: timelineLoading, reload: reloadTimeline } = useTimeline(id);
 
   if (plantLoading) {
@@ -522,14 +524,49 @@ export default function PlantDetailPage({
 
   return (
     <div className="pb-28">
-      {/* Hero cover photo */}
-      <PhotoFromStore
-        photoId={plant.coverPhotoId}
-        alt={plant.name}
-        className="w-full object-cover"
-        style={{ height: 260 }}
-        objectFit="cover"
-      />
+      {/* Hero cover photo + camera button to change avatar.
+          Note: changing coverPhotoId only swaps the avatar — Growth Compare and
+          Milestone marks look up the "first day" photo by timestamp, so this
+          edit has no semantic effect there. */}
+      <div className="relative">
+        <PhotoFromStore
+          photoId={plant.coverPhotoId}
+          alt={plant.name}
+          className="w-full object-cover"
+          style={{ height: 260 }}
+          objectFit="cover"
+        />
+        <button
+          type="button"
+          onClick={() => setCoverPickerOpen(true)}
+          aria-label={t("editCover")}
+          className="absolute flex items-center justify-center rounded-full transition-opacity active:opacity-70"
+          style={{
+            bottom: 12,
+            right: 12,
+            width: 36,
+            height: 36,
+            background: "rgba(253, 250, 246, 0.92)",
+            backdropFilter: "blur(8px)",
+            WebkitBackdropFilter: "blur(8px)",
+            color: "#3a3530",
+            boxShadow: "0 1px 6px rgba(0,0,0,0.12)",
+          }}
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+            <circle cx="12" cy="13" r="4" />
+          </svg>
+        </button>
+      </div>
+
+      {coverPickerOpen && (
+        <CoverPhotoPicker
+          plant={plant}
+          onClose={() => setCoverPickerOpen(false)}
+          onPicked={reloadPlant}
+        />
+      )}
 
       <div className="px-5 pt-5">
         {/* Plant name + nickname */}

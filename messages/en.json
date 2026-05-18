@@ -82,6 +82,9 @@
     "deleteRecord": "Delete",
     "deleteRecordConfirm": "Delete this record?",
     "recordActionsLabel": "More actions",
+    "editCover": "Change cover photo",
+    "chooseCover": "Choose a cover photo",
+    "noPhotosYet": "No photos yet",
     "save": "Save",
     "cancel": "Cancel"
   },

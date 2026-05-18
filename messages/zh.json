@@ -82,6 +82,9 @@
     "deleteRecord": "删除",
     "deleteRecordConfirm": "确认删除这条记录？",
     "recordActionsLabel": "更多操作",
+    "editCover": "更换头像",
+    "chooseCover": "选择一张作为头像",
+    "noPhotosYet": "还没有照片",
     "save": "保存",
     "cancel": "取消"
   },
