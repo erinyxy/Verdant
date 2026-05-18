@@ -17,7 +17,8 @@
       "fertilize": "🌱 肥料をあげた",
       "repot": "🪴 植え替えした",
       "prune": "✂️ 剪定した",
-      "bringHome": "🏠 迎えた"
+      "bringHome": "🏠 迎えた",
+      "sow": "🌾 種まき/挿し木した"
     },
     "pastState": {
       "newLeaf": "🌿 新しい葉が出た",
@@ -66,7 +67,8 @@
     "date": "いつ",
     "saved": "保存しました ✓",
     "comingSoon": "記録ページ — もうすぐ登場",
-    "bringHome": "迎えた"
+    "bringHome": "迎えた",
+    "sow": "種まき/挿し木"
   },
   "plantDetail": {
     "startedOn": "育て始め",
@@ -132,7 +134,8 @@
     "fertilize": "🌱 肥料",
     "repot": "🪴 植え替え",
     "prune": "✂️ 剪定",
-    "bringHome": "🏠 迎えた"
+    "bringHome": "🏠 迎えた",
+    "sow": "🌾 種まき/挿し木"
   },
   "states": {
     "newLeaf": "🌿 新葉",

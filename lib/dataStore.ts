@@ -16,7 +16,7 @@ import { openDB, type IDBPDatabase } from "idb";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-export type ActionType = "water" | "fertilize" | "repot" | "prune" | "bringHome";
+export type ActionType = "water" | "fertilize" | "repot" | "prune" | "bringHome" | "sow";
 export type StateType = "newLeaf" | "blooming" | "sick" | "lookingBeautiful";
 
 export interface Plant {
@@ -523,7 +523,7 @@ export async function syncMarks(): Promise<GrowthMark[]> {
   if (newMarks.length > 0) saveMarksToLS(combined);
 
   return combined.sort(
-    (a, b) => new Date(b.generatedAt).getTime() - new Date(a.generatedAt).getTime()
+    (a, b) => new Date(b.milestoneDate).getTime() - new Date(a.milestoneDate).getTime()
   );
 }
 

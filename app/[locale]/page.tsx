@@ -4,14 +4,17 @@ import { useState, useEffect, useCallback } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { usePlants, useComparePhotoIds } from "@/hooks/useDataStore";
-import { getRecordsByPlant, type Plant, type TimelineEntry } from "@/lib/dataStore";
+import { usePlants } from "@/hooks/useDataStore";
+import { getRecordsByPlant, getPhotosByPlant, getPhotoNearDate, type Plant, type TimelineEntry, type Photo } from "@/lib/dataStore";
 import PhotoFromStore from "@/components/PhotoFromStore";
 import PhotoCompare from "@/components/PhotoCompare";
 import LocaleSwitcher from "@/components/LocaleSwitcher";
 
 // A timeline entry enriched with its parent plant (for cross-plant display).
 type RichEntry = TimelineEntry & { plant: Plant };
+
+// Per-plant summary for the plant list card.
+type PlantSummary = { plant: Plant; latestEntry: TimelineEntry | null };
 
 // ─── Action / State label helpers ─────────────────────────────────────────────
 
@@ -74,7 +77,48 @@ function RecentActivity({ entries, locale }: { entries: RichEntry[]; locale: str
 
 function GrowthLookback({ plant }: { plant: Plant }) {
   const t = useTranslations("home");
-  const { leftId, rightId } = useComparePhotoIds(plant.id, "7d");
+  const [leftId, setLeftId] = useState<string | null>(null);
+  const [rightId, setRightId] = useState<string | null>(null);
+  const [rightLabel, setRightLabel] = useState<string>("");
+
+  useEffect(() => {
+    let cancelled = false;
+    async function resolve() {
+      const photos = await getPhotosByPlant(plant.id); // newest-first
+      if (!photos.length || cancelled) return;
+      const left = photos[0];
+      if (!cancelled) setLeftId(left.id);
+
+      // Try presets in order: 7d → 30d → first
+      const presets: Array<{ days: number | null; label: string }> = [
+        { days: 7,    label: t("sevenDaysAgo") },
+        { days: 30,   label: t("thirtyDaysAgo") },
+        { days: null, label: t("firstDay") },      // null = oldest photo
+      ];
+
+      for (const preset of presets) {
+        let targetDate: Date;
+        if (preset.days === null) {
+          targetDate = new Date(photos[photos.length - 1].timestamp);
+        } else {
+          targetDate = new Date();
+          targetDate.setDate(targetDate.getDate() - preset.days);
+        }
+        const right = await getPhotoNearDate(plant.id, targetDate);
+        if (cancelled) return;
+        if (right && right.id !== left.id) {
+          setRightId(right.id);
+          setRightLabel(preset.label);
+          return;
+        }
+      }
+      // No suitable second photo found
+      setRightId(null);
+      setRightLabel("");
+    }
+    resolve();
+    return () => { cancelled = true; };
+  }, [plant.id, t]);
 
   return (
     <div
@@ -88,7 +132,7 @@ function GrowthLookback({ plant }: { plant: Plant }) {
         leftPhotoId={leftId}
         rightPhotoId={rightId}
         leftLabel={t("today")}
-        rightLabel={rightId ? t("sevenDaysAgo") : undefined}
+        rightLabel={rightId ? rightLabel : undefined}
         summaryText={t("growthSummary")}
       />
     </div>
@@ -105,19 +149,21 @@ export default function HomePage() {
 
   // Cross-plant enrichment: fetch all timelines, merge & sort once.
   const [recentEntries, setRecentEntries] = useState<RichEntry[]>([]);
+  const [plantSummaries, setPlantSummaries] = useState<PlantSummary[]>([]);
   const [activePlant, setActivePlant] = useState<Plant | null>(null);
   const [enriching, setEnriching] = useState(false);
 
   const enrich = useCallback(async () => {
     if (plants.length === 0) {
       setRecentEntries([]);
+      setPlantSummaries([]);
       setActivePlant(null);
       return;
     }
     setEnriching(true);
     const results = await Promise.all(
       plants.map(async (plant) => {
-        const entries = await getRecordsByPlant(plant.id);
+        const entries = await getRecordsByPlant(plant.id); // newest-first
         return { plant, entries };
       }),
     );
@@ -129,8 +175,13 @@ export default function HomePage() {
 
     setRecentEntries(merged.slice(0, 3));
 
+    // Per-plant summary for plant list card (latestEntry = newest record)
+    setPlantSummaries(results.map(({ plant, entries }) => ({
+      plant,
+      latestEntry: entries[0] ?? null,
+    })));
+
     // Growth Lookback: plant whose most recent entry has a photo.
-    // Falls back to plants[0] if none have photos yet.
     const latestWithPhoto = merged.find((e) => e.photoIds.length > 0);
     setActivePlant(latestWithPhoto?.plant ?? plants[0]);
 
@@ -144,9 +195,9 @@ export default function HomePage() {
   }, [enrich]);
 
   return (
-    <div className="px-5 pt-10 pb-20">
+    <div className="px-5 pt-8 pb-20">
       {/* 顶栏：标题 + 语言切换 */}
-      <div className="flex items-start justify-between mb-8 pl-1">
+      <div className="flex items-start justify-between mb-5 pl-1">
         <h1
           className="text-2xl"
           style={{
@@ -165,8 +216,8 @@ export default function HomePage() {
       </div>
 
       {/* Recent Activity */}
-      <section className="mb-8">
-        <h2 className="text-xs uppercase tracking-widest mb-4" style={{ color: "#9a948e" }}>
+      <section className="mb-5">
+        <h2 className="text-xs uppercase tracking-widest mb-3" style={{ color: "#9a948e" }}>
           {t("recentActivity")}
         </h2>
         {loading || enriching ? (
@@ -181,8 +232,8 @@ export default function HomePage() {
 
       {/* Growth Lookback — shows the plant with the most recent photo */}
       {!loading && !enriching && activePlant && (
-        <section className="mb-8">
-          <h2 className="text-xs uppercase tracking-widest mb-4" style={{ color: "#9a948e" }}>
+        <section className="mb-5">
+          <h2 className="text-xs uppercase tracking-widest mb-3" style={{ color: "#9a948e" }}>
             {t("growthLookback")}
           </h2>
           <GrowthLookback plant={activePlant} />
@@ -223,9 +274,9 @@ export default function HomePage() {
           </div>
         ) : (
           <>
-            <div className="space-y-3">
-              {plants.slice(0, 3).map((plant) => (
-                <PlantCard key={plant.id} plant={plant} locale={locale} />
+            <div className="space-y-2.5">
+              {(enriching ? plants.slice(0, 3).map((p) => ({ plant: p, latestEntry: null })) : plantSummaries.slice(0, 3)).map(({ plant, latestEntry }) => (
+                <PlantCard key={plant.id} plant={plant} latestEntry={latestEntry} locale={locale} />
               ))}
             </div>
             {plants.length > 3 && (
@@ -306,53 +357,77 @@ export default function HomePage() {
 
 // ─── PlantCard ────────────────────────────────────────────────────────────────
 
-function PlantCard({ plant, locale }: { plant: Plant; locale: string }) {
-  const t = useTranslations("home");
+type GardenActionKey = `pastAction.${"water" | "fertilize" | "repot" | "prune" | "bringHome" | "sow"}`;
+type GardenStateKey = `pastState.${"newLeaf" | "blooming" | "sick" | "lookingBeautiful"}`;
 
-  // days since startedOn
-  const daysSince = plant.startedOn
-    ? Math.floor((Date.now() - new Date(plant.startedOn).getTime()) / 86_400_000)
+function PlantCard({ plant, latestEntry, locale }: { plant: Plant; latestEntry: TimelineEntry | null; locale: string }) {
+  const tHome = useTranslations("home");
+  const tGarden = useTranslations("garden");
+
+  const days = plant.startedOn
+    ? Math.max(0, Math.floor((Date.now() - new Date(plant.startedOn).getTime()) / 86_400_000))
+    : null;
+
+  const displayName = plant.nickname ? `${plant.nickname} · ${plant.name}` : plant.name;
+
+  const actLabel: string | null = (() => {
+    if (!latestEntry) return null;
+    if (latestEntry.actions.length > 0)
+      return tGarden(`pastAction.${latestEntry.actions[0]}` as GardenActionKey);
+    if (latestEntry.states.length > 0)
+      return tGarden(`pastState.${latestEntry.states[0]}` as GardenStateKey);
+    return null;
+  })();
+
+  const timeLabel: string | null = latestEntry
+    ? (() => {
+        const d = Math.floor((Date.now() - new Date(latestEntry.timestamp).getTime()) / 86_400_000);
+        if (d === 0) return tHome("today");
+        if (d === 1) return tHome("yesterday");
+        return tHome("daysAgo", { days: d });
+      })()
     : null;
 
   return (
     <Link
       href={`/${locale}/plant/${plant.id}`}
-      className="flex items-center gap-4 rounded-2xl px-4 py-3 transition-opacity active:opacity-70"
+      className="flex items-center gap-3 rounded-2xl px-4 py-3 transition-opacity active:opacity-70"
       style={{ background: "#fdfaf6", boxShadow: "0 1px 8px rgba(0,0,0,0.04)" }}
     >
-      {/* Cover photo */}
-      <PhotoFromStore
-        photoId={plant.coverPhotoId}
-        alt={plant.name}
-        className="w-14 h-14 rounded-xl flex-shrink-0 object-cover"
-        objectFit="cover"
-      />
+      {/* Circular avatar — matches garden page style */}
+      <div
+        className="flex-shrink-0 rounded-full overflow-hidden"
+        style={{ width: 52, height: 52, border: "1.5px solid rgba(140,110,70,0.10)", background: "#efe9dd" }}
+      >
+        <PhotoFromStore
+          photoId={plant.coverPhotoId}
+          alt={plant.name}
+          className="w-full h-full object-cover"
+          objectFit="cover"
+        />
+      </div>
 
-      {/* Info */}
+      {/* Info — 3 lines like garden */}
       <div className="flex-1 min-w-0">
         <p className="text-sm font-medium truncate" style={{ color: "#2c2c2c" }}>
-          {plant.nickname ? `${plant.nickname} · ` : ""}
-          {plant.name}
+          {displayName}
         </p>
-        {daysSince !== null && (
-          <p className="text-xs mt-0.5" style={{ color: "#b0aba5" }}>
-            {t("daysAgo", { days: daysSince })}
+        {days !== null && (
+          <p className="text-xs mt-0.5" style={{ color: "#7A9A77" }}>
+            {tGarden("daysCount", { n: days })}
           </p>
         )}
+        {actLabel && timeLabel ? (
+          <p className="text-xs mt-0.5 flex items-center min-w-0" style={{ color: "#b0aba5" }}>
+            <span className="truncate">{actLabel}</span>
+            <span className="flex-shrink-0 px-1 opacity-50">·</span>
+            <span className="flex-shrink-0 whitespace-nowrap">{timeLabel}</span>
+          </p>
+        ) : null}
       </div>
 
       {/* Arrow */}
-      <svg
-        width="16"
-        height="16"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="#b0aba5"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        className="flex-shrink-0"
-      >
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#c9c3bb" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0">
         <path d="M9 18l6-6-6-6" />
       </svg>
     </Link>

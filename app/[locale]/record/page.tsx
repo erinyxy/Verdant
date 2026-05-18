@@ -275,7 +275,7 @@ function RecordForm() {
           {t("action")}
         </p>
         <div className="flex flex-wrap gap-2">
-          {(["water", "fertilize", "repot", "prune", "bringHome"] as ActionType[]).map((a) => (
+          {(["water", "fertilize", "repot", "prune", "bringHome", "sow"] as ActionType[]).map((a) => (
             <ChipButton
               key={a}
               selected={actions.has(a)}
@@ -287,6 +287,7 @@ function RecordForm() {
               {a === "repot" && "🪴 "}
               {a === "prune" && "✂️ "}
               {a === "bringHome" && "🏠 "}
+              {a === "sow" && "🌾 "}
               {t(a)}
             </ChipButton>
           ))}

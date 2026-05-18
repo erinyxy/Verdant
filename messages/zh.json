@@ -17,13 +17,14 @@
       "fertilize": "🌱 施肥",
       "repot": "🪴 换盆",
       "prune": "✂️ 修剪",
-      "bringHome": "🏠 新来了"
+      "bringHome": "🏠 新来了",
+      "sow": "🌾 播种/扦插了"
     },
     "pastState": {
       "newLeaf": "🌿 长了新叶",
       "blooming": "🌸 开花了",
       "sick": "⚠️ 状态不好",
-      "lookingBeautiful": "💚 状态很好"
+      "lookingBeautiful": "💚 你今天很好看"
     }
   },
   "home": {
@@ -62,11 +63,12 @@
     "newLeaf": "长新叶",
     "blooming": "开花",
     "sick": "生病",
-    "lookingBeautiful": "状态很好",
+    "lookingBeautiful": "你今天很好看",
     "date": "日期",
     "saved": "已保存 ✓",
     "comingSoon": "记录页 — 即将上线",
-    "bringHome": "新来了"
+    "bringHome": "新来了",
+    "sow": "播种/扦插"
   },
   "plantDetail": {
     "startedOn": "开始养",
@@ -132,13 +134,14 @@
     "fertilize": "🌱 施肥",
     "repot": "🪴 换盆",
     "prune": "✂️ 修剪",
-    "bringHome": "🏠 新来了"
+    "bringHome": "🏠 新来了",
+    "sow": "🌾 播种/扦插"
   },
   "states": {
     "newLeaf": "🌿 长新叶",
     "blooming": "🌸 开花",
     "sick": "⚠️ 生病",
-    "lookingBeautiful": "💚 状态很好"
+    "lookingBeautiful": "💚 你今天很好看"
   },
   "localeSwitcher": {
     "en": "EN",

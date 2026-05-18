@@ -17,7 +17,8 @@
       "fertilize": "🌱 Fertilized",
       "repot": "🪴 Repotted",
       "prune": "✂️ Pruned",
-      "bringHome": "🏠 Brought home"
+      "bringHome": "🏠 Brought home",
+      "sow": "🌾 Propagated"
     },
     "pastState": {
       "newLeaf": "🌿 New leaf",
@@ -66,7 +67,8 @@
     "date": "When",
     "saved": "Saved ✓",
     "comingSoon": "Record page — coming soon",
-    "bringHome": "Brought home"
+    "bringHome": "Brought home",
+    "sow": "Sow/Propagate"
   },
   "plantDetail": {
     "startedOn": "Started",
@@ -132,7 +134,8 @@
     "fertilize": "🌱 Fertilize",
     "repot": "🪴 Repot",
     "prune": "✂️ Prune",
-    "bringHome": "🏠 Brought home"
+    "bringHome": "🏠 Brought home",
+    "sow": "🌾 Sow / Propagate"
   },
   "states": {
     "newLeaf": "🌿 New leaf",

@@ -11,10 +11,10 @@
  *  - FAB → /record?plantId=...
  */
 
-import { use, useState } from "react";
+import { use, useState, useEffect } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { useRouter } from "next/navigation";
-import { usePlant, useTimeline, useComparePhotoIds } from "@/hooks/useDataStore";
+import { usePlant, useTimeline } from "@/hooks/useDataStore";
 import PhotoFromStore from "@/components/PhotoFromStore";
 import PhotoCompare from "@/components/PhotoCompare";
 import {
@@ -23,6 +23,8 @@ import {
   type StateType,
   deleteRecord,
   updateRecord,
+  getPhotosByPlant,
+  getPhotoNearDate,
 } from "@/lib/dataStore";
 
 // ─── Types & helpers ──────────────────────────────────────────────────────────
@@ -35,6 +37,7 @@ const ACTION_EMOJI: Record<ActionType, string> = {
   repot: "🪴",
   prune: "✂️",
   bringHome: "🏠",
+  sow: "🌾",
 };
 const STATE_EMOJI: Record<StateType, string> = {
   newLeaf: "🌿",
@@ -43,8 +46,13 @@ const STATE_EMOJI: Record<StateType, string> = {
   lookingBeautiful: "💚",
 };
 
-const ALL_ACTIONS: ActionType[] = ["water", "fertilize", "repot", "prune", "bringHome"];
+const ALL_ACTIONS: ActionType[] = ["water", "fertilize", "repot", "prune", "bringHome", "sow"];
 const ALL_STATES: StateType[] = ["newLeaf", "blooming", "sick", "lookingBeautiful"];
+
+function todayStr(): string {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
 
 function formatDate(iso: string, locale: string) {
   return new Date(iso).toLocaleDateString(locale, {
@@ -75,8 +83,9 @@ function GrowthCompareModule({ plantId }: { plantId: string }) {
   const t = useTranslations("plantDetail");
   const tHome = useTranslations("home");
   const [preset, setPreset] = useState<ComparePreset>("7d");
-
-  const { leftId, rightId } = useComparePhotoIds(plantId, preset);
+  const [leftId, setLeftId] = useState<string | null>(null);
+  const [rightId, setRightId] = useState<string | null>(null);
+  const [resolvedRight, setResolvedRight] = useState<ComparePreset | null>(null);
 
   const presets: { key: ComparePreset; label: string }[] = [
     { key: "7d", label: tHome("sevenDaysAgo") },
@@ -84,7 +93,43 @@ function GrowthCompareModule({ plantId }: { plantId: string }) {
     { key: "first", label: tHome("firstDay") },
   ];
 
-  const rightLabel = presets.find((p) => p.key === preset)?.label;
+  useEffect(() => {
+    let cancelled = false;
+    async function resolve() {
+      const photos = await getPhotosByPlant(plantId);
+      if (!photos.length || cancelled) return;
+      const left = photos[0];
+      if (!cancelled) setLeftId(left.id);
+
+      // For user-selected preset, resolve directly (no auto-fallback when user switches)
+      const getTarget = (p: ComparePreset): Date => {
+        if (p === "first") return new Date(photos[photos.length - 1].timestamp);
+        const d = new Date();
+        d.setDate(d.getDate() - (p === "7d" ? 7 : 30));
+        return d;
+      };
+
+      // Try selected preset first; if no photo, auto-fall through to find best
+      const presetsToTry: ComparePreset[] = preset === "7d"
+        ? ["7d", "30d", "first"]
+        : [preset];  // if user explicitly picked 30d or first, respect it
+
+      for (const p of presetsToTry) {
+        const right = await getPhotoNearDate(plantId, getTarget(p));
+        if (cancelled) return;
+        if (right && right.id !== left.id) {
+          setRightId(right.id);
+          setResolvedRight(p);
+          return;
+        }
+      }
+      if (!cancelled) { setRightId(null); setResolvedRight(null); }
+    }
+    resolve();
+    return () => { cancelled = true; };
+  }, [plantId, preset]);
+
+  const rightLabel = resolvedRight ? presets.find((p) => p.key === resolvedRight)?.label : undefined;
   const summaryText = rightId ? t("growthSummary") : t("memoryAccumulating");
 
   return (
@@ -226,6 +271,7 @@ function TimelineCard({
           <input
             type="date"
             value={editDate}
+            max={todayStr()}
             onChange={(e) => setEditDate(e.target.value)}
             className="w-full text-sm px-3 py-2 rounded-xl outline-none"
             style={{ background: "#f2ece3", color: "#4a4540", border: "none" }}
@@ -315,7 +361,8 @@ function TimelineCard({
       ) : (
         /* ── View mode ── */
         <>
-          <div className="flex items-start justify-between gap-3 mb-2">
+          {/* Row 1: chips + timestamp (no buttons here) */}
+          <div className="flex items-start justify-between gap-3 mb-1.5">
             <div className="flex flex-wrap gap-1.5 flex-1">
               {chips.map((c, i) => (
                 <span
@@ -327,45 +374,15 @@ function TimelineCard({
                 </span>
               ))}
             </div>
-
-            {/* Timestamp + action buttons */}
-            <div className="flex flex-col items-end gap-1 flex-shrink-0">
-              <p className="text-[10px]" style={{ color: "#b0aba5" }}>{formatRelative(entry.timestamp)}</p>
-              <p className="text-[10px]" style={{ color: "#d0cbc3" }}>{formatDate(entry.timestamp, locale)}</p>
-              <div className="flex gap-1 mt-0.5">
-                {/* Edit button */}
-                <button
-                  onClick={() => setIsEditing(true)}
-                  className="text-[10px] px-1.5 py-0.5 rounded-md transition-colors"
-                  style={{ color: "#b0aba5" }}
-                  title={tPlantDetail("editRecord")}
-                  aria-label={tPlantDetail("editRecord")}
-                >
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-                  </svg>
-                </button>
-                {/* Delete button */}
-                <button
-                  onClick={handleDelete}
-                  className="text-[10px] px-1.5 py-0.5 rounded-md transition-colors"
-                  style={{ color: "#b0aba5" }}
-                  title={tPlantDetail("deleteRecord")}
-                  aria-label={tPlantDetail("deleteRecord")}
-                >
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <line x1="18" y1="6" x2="6" y2="18" />
-                    <line x1="6" y1="6" x2="18" y2="18" />
-                  </svg>
-                </button>
-              </div>
+            <div className="flex flex-col items-end flex-shrink-0">
+              <p className="text-[10px] whitespace-nowrap" style={{ color: "#b0aba5" }}>{formatRelative(entry.timestamp)}</p>
+              <p className="text-[10px] whitespace-nowrap" style={{ color: "#d0cbc3" }}>{formatDate(entry.timestamp, locale)}</p>
             </div>
           </div>
 
           {/* Note */}
           {entry.note && (
-            <p className="text-xs italic mb-3" style={{ color: "#7a7570" }}>
+            <p className="text-xs italic mb-1.5" style={{ color: "#7a7570" }}>
               &ldquo;{entry.note}&rdquo;
             </p>
           )}
@@ -375,11 +392,31 @@ function TimelineCard({
             <PhotoFromStore
               photoId={entry.photoIds[0]}
               alt=""
-              className="w-full rounded-xl mt-2 object-cover"
+              className="w-full rounded-xl mt-1.5 object-cover"
               style={{ maxHeight: 200 }}
               objectFit="cover"
             />
           )}
+
+          {/* Edit / Delete — subtle text row at bottom, doesn't inflate card height */}
+          <div className="flex items-center justify-end gap-3 mt-2 pt-1.5" style={{ borderTop: "1px solid rgba(0,0,0,0.04)" }}>
+            <button
+              onClick={() => setIsEditing(true)}
+              className="text-[11px] transition-opacity active:opacity-60"
+              style={{ color: "#c0b8b0" }}
+              aria-label={tPlantDetail("editRecord")}
+            >
+              {tPlantDetail("editRecord")}
+            </button>
+            <button
+              onClick={handleDelete}
+              className="text-[11px] transition-opacity active:opacity-60"
+              style={{ color: "#c0b8b0" }}
+              aria-label={tPlantDetail("deleteRecord")}
+            >
+              {tPlantDetail("deleteRecord")}
+            </button>
+          </div>
         </>
       )}
     </div>
