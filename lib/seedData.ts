@@ -41,9 +41,21 @@ const PLANTS: PlantSeed[] = [
     key: "rubber",
     names: { en: "Rubber Tree", ja: "ゴムノキ", zh: "橡皮树" },
     nickname: "gogo",
-    startedOn: "2025-11-27",
-    coverPhoto: "/demo-photos/rubber-cover.jpg",
+    startedOn: "2025-11-18",
+    coverPhoto: "/demo-photos/rubber-u-cover.jpg",
     records: [
+      {
+        date: "2025-11-23",
+        actions: ["water"],
+        states: ["lookingBeautiful"],
+        photo: "/demo-photos/rubber-u-rec0-2025-11-23.jpg",
+      },
+      {
+        date: "2025-11-27",
+        actions: [],
+        states: ["newLeaf"],
+        photo: "/demo-photos/rubber-u-rec1-2025-11-27.jpg",
+      },
       {
         date: "2025-12-01",
         actions: ["repot"],
@@ -56,17 +68,52 @@ const PLANTS: PlantSeed[] = [
         photo: "/demo-photos/rubber-rec1-photo0.jpg",
       },
       {
+        date: "2025-12-30",
+        actions: [],
+        states: ["newLeaf"],
+        photo: "/demo-photos/rubber-u-rec2-2025-12-30.jpg",
+      },
+      {
+        date: "2026-03-30",
+        actions: [],
+        states: ["newLeaf"],
+        photo: "/demo-photos/rubber-u-rec3-2026-03-30.jpg",
+      },
+      {
         date: "2026-04-14",
         actions: [],
         states: ["sick"],
       },
       {
+        date: "2026-04-18",
+        actions: ["fertilize"],
+        states: [],
+      },
+      {
+        date: "2026-04-23",
+        actions: [],
+        states: ["newLeaf"],
+        photo: "/demo-photos/rubber-u-rec4-2026-04-23.jpg",
+      },
+      {
+        date: "2026-04-26",
+        actions: [],
+        states: ["sick"],
+        photo: "/demo-photos/rubber-u-rec5-2026-04-26.jpg",
+      },
+      {
         date: "2026-05-13",
         actions: [],
         states: ["newLeaf", "lookingBeautiful"],
+        photo: "/demo-photos/rubber-u-rec6-2026-05-13.jpg",
       },
       {
         date: "2026-05-14",
+        actions: ["fertilize"],
+        states: [],
+      },
+      {
+        date: "2026-05-15",
         actions: ["fertilize"],
         states: [],
       },
@@ -110,6 +157,7 @@ const PLANTS: PlantSeed[] = [
         date: "2026-03-27",
         actions: [],
         states: ["sick"],
+        note: "土替わり",
         photo: "/demo-photos/daisy-rec2-photo0.jpg",
       },
       {
@@ -128,9 +176,15 @@ const PLANTS: PlantSeed[] = [
   {
     key: "tulip",
     names: { en: "Tulip", ja: "チューリップ", zh: "郁金香" },
-    startedOn: "2025-12-25",
+    startedOn: "2025-12-01",
     coverPhoto: "/demo-photos/tulip-cover.jpg",
     records: [
+      {
+        date: "2026-01-15",
+        actions: [],
+        states: ["newLeaf"],
+        note: "芽が出た",
+      },
       {
         date: "2026-02-28",
         actions: ["repot"],
@@ -141,6 +195,12 @@ const PLANTS: PlantSeed[] = [
         actions: [],
         states: ["newLeaf"],
         photo: "/demo-photos/tulip-rec1-photo0.jpg",
+      },
+      {
+        date: "2026-04-04",
+        actions: ["fertilize"],
+        states: [],
+        photo: "/demo-photos/tulip-u-rec0-2026-04-04.jpg",
       },
       {
         date: "2026-04-07",
