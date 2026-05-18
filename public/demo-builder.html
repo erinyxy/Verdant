@@ -792,38 +792,87 @@ function exportData() {
 }
 
 // ══════════════════════════════════════
-//  Auto-save
+//  Auto-save — IndexedDB（容量远大于 localStorage）
 // ══════════════════════════════════════
-const LS_KEY = 'verdant-demo-builder-v2';
+const DB_NAME = 'verdant-builder';
+const DB_STORE = 'state';
+const DB_KEY = 'current';
+// Legacy localStorage keys (for one-time migration only)
+const LS_KEYS = ['verdant-demo-builder-v2', 'verdant-demo-builder-v1'];
 
-function saveToLocal() {
+function openDB() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(DB_NAME, 1);
+    req.onupgradeneeded = (e) => e.target.result.createObjectStore(DB_STORE);
+    req.onsuccess = (e) => resolve(e.target.result);
+    req.onerror = (e) => reject(e.target.error);
+  });
+}
+
+async function saveToLocal() {
   try {
-    localStorage.setItem(LS_KEY, JSON.stringify(state));
+    const db = await openDB();
+    await new Promise((resolve, reject) => {
+      const tx = db.transaction(DB_STORE, 'readwrite');
+      tx.objectStore(DB_STORE).put(state, DB_KEY);
+      tx.oncomplete = resolve;
+      tx.onerror = () => reject(tx.error);
+    });
     const el = document.getElementById('saveStatus');
-    if (el) { el.textContent = '已保存 ✓'; clearTimeout(saveToLocal._t); saveToLocal._t = setTimeout(() => { el.textContent = ''; }, 2500); }
+    if (el) {
+      el.textContent = '已保存 ✓';
+      clearTimeout(saveToLocal._t);
+      saveToLocal._t = setTimeout(() => { el.textContent = ''; }, 2500);
+    }
   } catch(e) {
+    console.error('Save failed:', e);
     const el = document.getElementById('saveStatus');
-    if (el) el.textContent = '⚠️ 存储满了';
+    if (el) el.textContent = '⚠️ 保存失败';
   }
 }
 
-function loadFromLocal() {
+async function loadFromLocal() {
   try {
-    // Try new key first, fall back to old key
-    const raw = localStorage.getItem(LS_KEY) || localStorage.getItem('verdant-demo-builder-v1');
-    if (!raw) return false;
-    const saved = JSON.parse(raw);
+    // 1. Try IndexedDB first
+    const db = await openDB();
+    const saved = await new Promise((resolve, reject) => {
+      const tx = db.transaction(DB_STORE, 'readonly');
+      const req = tx.objectStore(DB_STORE).get(DB_KEY);
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => reject(req.error);
+    });
     if (saved && Array.isArray(saved.plants) && saved.plants.length > 0) {
-      state = saved; return true;
+      state = saved;
+      return true;
     }
-  } catch(e) {}
+
+    // 2. Migrate from old localStorage if IndexedDB is empty
+    for (const key of LS_KEYS) {
+      const raw = localStorage.getItem(key);
+      if (!raw) continue;
+      const legacy = JSON.parse(raw);
+      if (legacy && Array.isArray(legacy.plants) && legacy.plants.length > 0) {
+        state = legacy;
+        // Migrate to IndexedDB and clean up localStorage
+        await saveToLocal();
+        LS_KEYS.forEach(k => localStorage.removeItem(k));
+        return true;
+      }
+    }
+  } catch(e) {
+    console.error('Load failed:', e);
+  }
   return false;
 }
 
-function clearLocal() {
+async function clearLocal() {
   if (!confirm('确认清空所有数据？此操作不可撤销。')) return;
-  localStorage.removeItem(LS_KEY);
-  localStorage.removeItem('verdant-demo-builder-v1');
+  try {
+    const db = await openDB();
+    const tx = db.transaction(DB_STORE, 'readwrite');
+    tx.objectStore(DB_STORE).clear();
+  } catch(e) {}
+  LS_KEYS.forEach(k => localStorage.removeItem(k));
   state = { plants: [], activePlantId: null };
   renderAll();
   toast('已清空');
@@ -832,11 +881,14 @@ function clearLocal() {
 // ══════════════════════════════════════
 //  Init
 // ══════════════════════════════════════
-const hadData = loadFromLocal();
-renderAll();
-if (hadData) {
-  setTimeout(() => toast(`✅ 已恢复上次进度：${state.plants.length} 株植物`), 300);
+async function init() {
+  const hadData = await loadFromLocal();
+  renderAll();
+  if (hadData) {
+    setTimeout(() => toast(`✅ 已恢复上次进度：${state.plants.length} 株植物`), 300);
+  }
 }
+init();
 </script>
 </body>
 </html>
