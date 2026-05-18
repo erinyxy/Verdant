@@ -617,6 +617,7 @@ function renderAll() {
   renderSidebar();
   renderMain();
   updateStats();
+  if (typeof scheduleSave === 'function') scheduleSave();
 }
 
 function updateStats() {
@@ -885,8 +886,7 @@ const LS_KEY = 'verdant-demo-builder-v1';
 let _saveTimer = null;
 
 function scheduleSave() {
-  clearTimeout(_saveTimer);
-  _saveTimer = setTimeout(saveToLocal, 800);
+  saveToLocal();
 }
 
 function saveToLocal() {
@@ -924,13 +924,6 @@ function showSaveStatus(msg) {
   if (el) { el.textContent = msg; el.style.opacity = '1'; }
   clearTimeout(showSaveStatus._t);
   showSaveStatus._t = setTimeout(() => { if (el) el.style.opacity = '0'; }, 3000);
-}
-
-// Patch renderAll to also trigger save
-const _origRenderAll = renderAll;
-function renderAll() {
-  _origRenderAll();
-  scheduleSave();
 }
 
 // ══════════════════════════════════════════════════
