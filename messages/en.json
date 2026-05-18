@@ -81,6 +81,7 @@
     "editRecord": "Edit",
     "deleteRecord": "Delete",
     "deleteRecordConfirm": "Delete this record?",
+    "recordActionsLabel": "More actions",
     "save": "Save",
     "cancel": "Cancel"
   },

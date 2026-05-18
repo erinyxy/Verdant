@@ -11,7 +11,7 @@
  *  - FAB → /record?plantId=...
  */
 
-import { use, useState, useEffect } from "react";
+import { use, useState, useEffect, useRef } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { useRouter } from "next/navigation";
 import { usePlant, useTimeline } from "@/hooks/useDataStore";
@@ -59,6 +59,17 @@ function formatDate(iso: string, locale: string) {
     year: "numeric",
     month: "short",
     day: "numeric",
+  });
+}
+
+/** Compact "MMM d" (or with year if not the current year). Used in timeline cards. */
+function formatPrimaryDate(iso: string, locale: string) {
+  const d = new Date(iso);
+  const sameYear = d.getFullYear() === new Date().getFullYear();
+  return d.toLocaleDateString(locale, {
+    month: "short",
+    day: "numeric",
+    ...(sameYear ? {} : { year: "numeric" }),
   });
 }
 
@@ -187,7 +198,6 @@ function TimelineCard({
 }) {
   const tActions = useTranslations("actions");
   const tStates = useTranslations("states");
-  const tHome = useTranslations("home");
   const tPlantDetail = useTranslations("plantDetail");
 
   const [isEditing, setIsEditing] = useState(false);
@@ -199,12 +209,30 @@ function TimelineCard({
   const [editStates, setEditStates] = useState<Set<StateType>>(new Set(entry.states));
   const [editNote, setEditNote] = useState(entry.note ?? "");
 
-  function formatRelative(iso: string): string {
-    const diff = Math.floor((Date.now() - new Date(iso).getTime()) / 86_400_000);
-    if (diff === 0) return tHome("today");
-    if (diff === 1) return tHome("yesterday");
-    return tHome("daysAgo", { days: diff });
-  }
+  // 3-dot action menu (Edit / Delete). Persistent text buttons are noisy;
+  // these are low-frequency actions, so they live in a popover instead.
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    function onPointer(e: MouseEvent | TouchEvent) {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuOpen(false);
+      }
+    }
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") setMenuOpen(false);
+    }
+    document.addEventListener("mousedown", onPointer);
+    document.addEventListener("touchstart", onPointer);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onPointer);
+      document.removeEventListener("touchstart", onPointer);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [menuOpen]);
 
   function toggleAction(a: ActionType) {
     setEditActions((prev) => {
@@ -361,9 +389,10 @@ function TimelineCard({
       ) : (
         /* ── View mode ── */
         <>
-          {/* Row 1: chips + timestamp (no buttons here) */}
+          {/* Header: chips on the left, primary date + 3-dot menu in the upper-right.
+              Edit/Delete live inside the menu; no persistent action row at the bottom. */}
           <div className="flex items-start justify-between gap-3 mb-1.5">
-            <div className="flex flex-wrap gap-1.5 flex-1">
+            <div className="flex flex-wrap gap-1.5 flex-1 min-w-0">
               {chips.map((c, i) => (
                 <span
                   key={i}
@@ -374,9 +403,62 @@ function TimelineCard({
                 </span>
               ))}
             </div>
-            <div className="flex flex-col items-end flex-shrink-0">
-              <p className="text-[10px] whitespace-nowrap" style={{ color: "#b0aba5" }}>{formatRelative(entry.timestamp)}</p>
-              <p className="text-[10px] whitespace-nowrap" style={{ color: "#d0cbc3" }}>{formatDate(entry.timestamp, locale)}</p>
+
+            <div className="flex items-center gap-1 flex-shrink-0 -mt-0.5">
+              <span className="text-[11px] whitespace-nowrap" style={{ color: "#b0aba5" }}>
+                {formatPrimaryDate(entry.timestamp, locale)}
+              </span>
+
+              {/* Action menu — popover wrapper for outside-click handling */}
+              <div ref={menuRef} className="relative">
+                <button
+                  type="button"
+                  onClick={() => setMenuOpen((v) => !v)}
+                  aria-label={tPlantDetail("recordActionsLabel")}
+                  aria-haspopup="menu"
+                  aria-expanded={menuOpen}
+                  className="flex items-center justify-center w-6 h-6 rounded-full transition-opacity active:opacity-50"
+                  style={{ color: "#9a948e" }}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                    <circle cx="5" cy="12" r="1.6" />
+                    <circle cx="12" cy="12" r="1.6" />
+                    <circle cx="19" cy="12" r="1.6" />
+                  </svg>
+                </button>
+
+                {menuOpen && (
+                  <div
+                    role="menu"
+                    className="absolute right-0 mt-1 z-20 rounded-xl overflow-hidden"
+                    style={{
+                      background: "#fdfaf6",
+                      boxShadow: "0 2px 12px rgba(0,0,0,0.10)",
+                      border: "1px solid rgba(0,0,0,0.05)",
+                      minWidth: 120,
+                    }}
+                  >
+                    <button
+                      type="button"
+                      role="menuitem"
+                      onClick={() => { setMenuOpen(false); setIsEditing(true); }}
+                      className="block w-full text-left px-3 py-2 text-xs transition-colors hover:bg-black/[0.03]"
+                      style={{ color: "#3a3530" }}
+                    >
+                      {tPlantDetail("editRecord")}
+                    </button>
+                    <button
+                      type="button"
+                      role="menuitem"
+                      onClick={() => { setMenuOpen(false); handleDelete(); }}
+                      className="block w-full text-left px-3 py-2 text-xs transition-colors hover:bg-black/[0.03]"
+                      style={{ color: "#b85450" }}
+                    >
+                      {tPlantDetail("deleteRecord")}
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
@@ -397,26 +479,6 @@ function TimelineCard({
               objectFit="cover"
             />
           )}
-
-          {/* Edit / Delete — subtle text row at bottom, doesn't inflate card height */}
-          <div className="flex items-center justify-end gap-3 mt-2 pt-1.5" style={{ borderTop: "1px solid rgba(0,0,0,0.04)" }}>
-            <button
-              onClick={() => setIsEditing(true)}
-              className="text-[11px] transition-opacity active:opacity-60"
-              style={{ color: "#c0b8b0" }}
-              aria-label={tPlantDetail("editRecord")}
-            >
-              {tPlantDetail("editRecord")}
-            </button>
-            <button
-              onClick={handleDelete}
-              className="text-[11px] transition-opacity active:opacity-60"
-              style={{ color: "#c0b8b0" }}
-              aria-label={tPlantDetail("deleteRecord")}
-            >
-              {tPlantDetail("deleteRecord")}
-            </button>
-          </div>
         </>
       )}
     </div>

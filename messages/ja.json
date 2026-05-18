@@ -81,6 +81,7 @@
     "editRecord": "編集",
     "deleteRecord": "削除",
     "deleteRecordConfirm": "この記録を削除しますか？",
+    "recordActionsLabel": "その他の操作",
     "save": "保存",
     "cancel": "キャンセル"
   },

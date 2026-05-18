@@ -81,6 +81,7 @@
     "editRecord": "编辑",
     "deleteRecord": "删除",
     "deleteRecordConfirm": "确认删除这条记录？",
+    "recordActionsLabel": "更多操作",
     "save": "保存",
     "cancel": "取消"
   },
