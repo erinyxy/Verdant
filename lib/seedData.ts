@@ -26,12 +26,12 @@ interface PlantSeed {
   names: Record<Locale, string>;
   nickname?: string;
   startedOn: string; // YYYY-MM-DD
-  coverPhoto: string; // path under /demo-photos/
+  coverPhoto?: string; // path under /demo-photos/ (optional)
   records: Array<{
     date: string; // YYYY-MM-DD
     actions: ActionType[];
     states: StateType[];
-    note?: Record<Locale, string>;
+    note?: string | Record<Locale, string>; // string = same across all locales
     photo?: string; // path under /demo-photos/
   }>;
 }
@@ -150,6 +150,135 @@ const PLANTS: PlantSeed[] = [
       },
     ],
   },
+  {
+    key: "pansyViola",
+    names: { en: "Pansy / Viola", ja: "パンジー・ビオラ", zh: "三色堇/角堇" },
+    startedOn: "2025-10-19",
+    records: [
+      {
+        date: "2026-02-28",
+        actions: ["repot"],
+        states: [],
+      },
+      {
+        date: "2026-05-18",
+        actions: ["water"],
+        states: ["blooming"],
+      },
+    ],
+  },
+  {
+    key: "peperomia",
+    names: { en: "Peperomia", ja: "ペペロミア", zh: "椒草" },
+    nickname: "佩佩",
+    startedOn: "2026-02-15",
+    records: [
+      {
+        date: "2026-03-03",
+        actions: [],
+        states: ["sick"],
+        note: "高植え",
+      },
+      {
+        date: "2026-03-15",
+        actions: [],
+        states: ["newLeaf", "lookingBeautiful"],
+      },
+      {
+        date: "2026-03-27",
+        actions: ["repot"],
+        states: [],
+      },
+    ],
+  },
+  {
+    key: "dokudami",
+    names: { en: "Dokudami", ja: "ドクダミ", zh: "鱼腥草" },
+    startedOn: "2025-07-02",
+    records: [],
+  },
+  {
+    key: "haSansho",
+    names: { en: "Leaf Sansho", ja: "葉山椒", zh: "叶山椒" },
+    startedOn: "2026-04-18",
+    records: [],
+  },
+  {
+    key: "yamatoMini",
+    names: { en: "Yamato Mini", ja: "大和美尼", zh: "大和美尼" },
+    startedOn: "2026-03-03",
+    records: [
+      {
+        date: "2026-04-04",
+        actions: [],
+        states: ["lookingBeautiful"],
+        note: "新しい根",
+      },
+    ],
+  },
+  {
+    key: "sansevieria",
+    names: { en: "Sansevieria", ja: "サンセベリア", zh: "虎尾兰" },
+    nickname: "虎虎",
+    startedOn: "2026-02-15",
+    records: [
+      {
+        date: "2026-02-15",
+        actions: ["bringHome"],
+        states: [],
+      },
+      {
+        date: "2026-04-14",
+        actions: ["water"],
+        states: [],
+      },
+      {
+        date: "2026-04-25",
+        actions: ["repot"],
+        states: [],
+      },
+      {
+        date: "2026-05-17",
+        actions: ["water"],
+        states: [],
+      },
+    ],
+  },
+  {
+    key: "basil",
+    names: { en: "Basil", ja: "Basil", zh: "罗勒" },
+    startedOn: "2026-04-24",
+    records: [
+      {
+        date: "2026-04-24",
+        actions: ["sow"],
+        states: [],
+        note: "水栽培",
+      },
+      {
+        date: "2026-04-30",
+        actions: [],
+        states: ["lookingBeautiful"],
+        note: "細根が出た",
+      },
+      {
+        date: "2026-05-06",
+        actions: ["repot"],
+        states: [],
+        note: "土に入れた",
+      },
+      {
+        date: "2026-05-16",
+        actions: ["water"],
+        states: [],
+      },
+      {
+        date: "2026-05-18",
+        actions: [],
+        states: ["lookingBeautiful"],
+      },
+    ],
+  },
 ];
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -229,22 +358,24 @@ async function runSeed(locale: Locale): Promise<void> {
       startedOn: seed.startedOn,
     });
 
-    // 2. Fetch and save cover photo
-    const coverDataUrl = await fetchAsDataUrl(seed.coverPhoto);
-    const coverPhoto = await savePhoto({
-      plantId: plant.id,
-      timestamp: new Date(seed.startedOn).toISOString(),
-      dataUrl: coverDataUrl,
-    });
+    // 2. Fetch and save cover photo (optional)
+    if (seed.coverPhoto) {
+      const coverDataUrl = await fetchAsDataUrl(seed.coverPhoto);
+      const coverPhoto = await savePhoto({
+        plantId: plant.id,
+        timestamp: new Date(seed.startedOn).toISOString(),
+        dataUrl: coverDataUrl,
+      });
 
-    // 3. Update plant with coverPhotoId
-    await savePlant({
-      id: plant.id,
-      name: plant.name,
-      nickname: plant.nickname,
-      startedOn: plant.startedOn,
-      coverPhotoId: coverPhoto.id,
-    });
+      // 3. Update plant with coverPhotoId
+      await savePlant({
+        id: plant.id,
+        name: plant.name,
+        nickname: plant.nickname,
+        startedOn: plant.startedOn,
+        coverPhotoId: coverPhoto.id,
+      });
+    }
 
     // 4. Create timeline records
     for (const r of seed.records) {
@@ -261,13 +392,16 @@ async function runSeed(locale: Locale): Promise<void> {
         photoIds = [photo.id];
       }
 
+      // note can be a locale-specific Record or a plain string (user input, locale-invariant)
+      const note = typeof r.note === "string" ? r.note : r.note?.[locale];
+
       await saveRecord({
         plantId: plant.id,
         timestamp,
         actions: r.actions,
         states: r.states,
         photoIds,
-        note: r.note?.[locale],
+        note,
       });
     }
   }
