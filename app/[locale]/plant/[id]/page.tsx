@@ -7,7 +7,7 @@
  *  - Hero cover photo (full-width)
  *  - Plant name / nickname / startedOn
  *  - Growth Compare module (PhotoCompare + 3 preset tabs)
- *  - Timeline (entries sorted newest-first)
+ *  - Timeline (entries sorted newest-first, each card supports edit & delete)
  *  - FAB → /record?plantId=...
  */
 
@@ -17,7 +17,13 @@ import { useRouter } from "next/navigation";
 import { usePlant, useTimeline, useComparePhotoIds } from "@/hooks/useDataStore";
 import PhotoFromStore from "@/components/PhotoFromStore";
 import PhotoCompare from "@/components/PhotoCompare";
-import { type TimelineEntry, type ActionType, type StateType } from "@/lib/dataStore";
+import {
+  type TimelineEntry,
+  type ActionType,
+  type StateType,
+  deleteRecord,
+  updateRecord,
+} from "@/lib/dataStore";
 
 // ─── Types & helpers ──────────────────────────────────────────────────────────
 
@@ -37,6 +43,9 @@ const STATE_EMOJI: Record<StateType, string> = {
   lookingBeautiful: "💚",
 };
 
+const ALL_ACTIONS: ActionType[] = ["water", "fertilize", "repot", "prune", "bringHome"];
+const ALL_STATES: StateType[] = ["newLeaf", "blooming", "sick", "lookingBeautiful"];
+
 function formatDate(iso: string, locale: string) {
   return new Date(iso).toLocaleDateString(locale, {
     year: "numeric",
@@ -45,11 +54,19 @@ function formatDate(iso: string, locale: string) {
   });
 }
 
-function formatRelative(iso: string): string {
-  const diff = Math.floor((Date.now() - new Date(iso).getTime()) / 86_400_000);
-  if (diff === 0) return "Today";
-  if (diff === 1) return "Yesterday";
-  return `${diff}d ago`;
+/** YYYY-MM-DD → ISO timestamp at local noon (avoids timezone date-shift). */
+function dateStrToTimestamp(dateStr: string): string {
+  const [y, m, d] = dateStr.split("-").map(Number);
+  return new Date(y, m - 1, d, 12, 0, 0).toISOString();
+}
+
+/** ISO → YYYY-MM-DD for <input type="date"> */
+function timestampToDateStr(iso: string): string {
+  const d = new Date(iso);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
 }
 
 // ─── Growth Compare sub-component ─────────────────────────────────────────────
@@ -112,10 +129,89 @@ function GrowthCompareModule({ plantId }: { plantId: string }) {
 
 // ─── Timeline entry card ──────────────────────────────────────────────────────
 
-function TimelineCard({ entry, locale }: { entry: TimelineEntry; locale: string }) {
+function TimelineCard({
+  entry,
+  locale,
+  onDeleted,
+  onUpdated,
+}: {
+  entry: TimelineEntry;
+  locale: string;
+  onDeleted: () => void;
+  onUpdated: () => void;
+}) {
+  const tActions = useTranslations("actions");
+  const tStates = useTranslations("states");
+  const tHome = useTranslations("home");
+  const tPlantDetail = useTranslations("plantDetail");
+
+  const [isEditing, setIsEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  // Edit form state
+  const [editDate, setEditDate] = useState(timestampToDateStr(entry.timestamp));
+  const [editActions, setEditActions] = useState<Set<ActionType>>(new Set(entry.actions));
+  const [editStates, setEditStates] = useState<Set<StateType>>(new Set(entry.states));
+  const [editNote, setEditNote] = useState(entry.note ?? "");
+
+  function formatRelative(iso: string): string {
+    const diff = Math.floor((Date.now() - new Date(iso).getTime()) / 86_400_000);
+    if (diff === 0) return tHome("today");
+    if (diff === 1) return tHome("yesterday");
+    return tHome("daysAgo", { days: diff });
+  }
+
+  function toggleAction(a: ActionType) {
+    setEditActions((prev) => {
+      const next = new Set(prev);
+      next.has(a) ? next.delete(a) : next.add(a);
+      return next;
+    });
+  }
+
+  function toggleState(s: StateType) {
+    setEditStates((prev) => {
+      const next = new Set(prev);
+      next.has(s) ? next.delete(s) : next.add(s);
+      return next;
+    });
+  }
+
+  function handleCancelEdit() {
+    setIsEditing(false);
+    setEditDate(timestampToDateStr(entry.timestamp));
+    setEditActions(new Set(entry.actions));
+    setEditStates(new Set(entry.states));
+    setEditNote(entry.note ?? "");
+  }
+
+  async function handleSave() {
+    setSaving(true);
+    try {
+      await updateRecord({
+        id: entry.id,
+        timestamp: dateStrToTimestamp(editDate),
+        actions: Array.from(editActions),
+        states: Array.from(editStates),
+        note: editNote.trim() || undefined,
+      });
+      setIsEditing(false);
+      onUpdated();
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleDelete() {
+    if (!window.confirm(tPlantDetail("deleteRecordConfirm"))) return;
+    await deleteRecord(entry.id);
+    onDeleted();
+  }
+
+  // View mode chips (i18n)
   const chips = [
-    ...entry.actions.map((a) => `${ACTION_EMOJI[a]} ${a}`),
-    ...entry.states.map((s) => `${STATE_EMOJI[s]} ${s}`),
+    ...entry.actions.map((a) => tActions(a)),
+    ...entry.states.map((s) => tStates(s)),
   ];
 
   return (
@@ -123,40 +219,168 @@ function TimelineCard({ entry, locale }: { entry: TimelineEntry; locale: string 
       className="rounded-2xl p-4"
       style={{ background: "#fdfaf6", boxShadow: "0 1px 8px rgba(0,0,0,0.04)" }}
     >
-      <div className="flex items-start justify-between gap-3 mb-2">
-        <div className="flex flex-wrap gap-1.5">
-          {chips.map((c, i) => (
-            <span
-              key={i}
-              className="text-xs px-2 py-0.5 rounded-full"
-              style={{ background: "#e8f0e8", color: "#5a8a5a" }}
+      {isEditing ? (
+        /* ── Edit mode ── */
+        <div className="space-y-3">
+          {/* Date */}
+          <input
+            type="date"
+            value={editDate}
+            onChange={(e) => setEditDate(e.target.value)}
+            className="w-full text-sm px-3 py-2 rounded-xl outline-none"
+            style={{ background: "#f2ece3", color: "#4a4540", border: "none" }}
+          />
+
+          {/* Actions */}
+          <div>
+            <p className="text-[10px] uppercase tracking-widest mb-1.5" style={{ color: "#9a948e" }}>
+              {tPlantDetail("editRecord")} — Actions
+            </p>
+            <div className="flex flex-wrap gap-1.5">
+              {ALL_ACTIONS.map((a) => {
+                const selected = editActions.has(a);
+                return (
+                  <button
+                    key={a}
+                    type="button"
+                    onClick={() => toggleAction(a)}
+                    className="text-xs px-2.5 py-1 rounded-full transition-all"
+                    style={{
+                      background: selected ? "#8fad8f" : "#e8f0e8",
+                      color: selected ? "#fff" : "#5a8a5a",
+                    }}
+                  >
+                    {ACTION_EMOJI[a]} {tActions(a).replace(/^[^\s]+\s/, "")}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* States */}
+          <div>
+            <p className="text-[10px] uppercase tracking-widest mb-1.5" style={{ color: "#9a948e" }}>
+              States
+            </p>
+            <div className="flex flex-wrap gap-1.5">
+              {ALL_STATES.map((s) => {
+                const selected = editStates.has(s);
+                return (
+                  <button
+                    key={s}
+                    type="button"
+                    onClick={() => toggleState(s)}
+                    className="text-xs px-2.5 py-1 rounded-full transition-all"
+                    style={{
+                      background: selected ? "#c9a97a" : "#f2ece3",
+                      color: selected ? "#fff" : "#8a7a5a",
+                    }}
+                  >
+                    {STATE_EMOJI[s]} {tStates(s).replace(/^[^\s]+\s/, "")}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Note */}
+          <textarea
+            value={editNote}
+            onChange={(e) => setEditNote(e.target.value)}
+            rows={2}
+            placeholder="Optional note..."
+            className="w-full text-sm px-3 py-2 rounded-xl outline-none resize-none"
+            style={{ background: "#f2ece3", color: "#4a4540", border: "none" }}
+          />
+
+          {/* Save / Cancel */}
+          <div className="flex gap-2 pt-1">
+            <button
+              onClick={handleCancelEdit}
+              className="flex-1 text-xs py-2 rounded-xl"
+              style={{ background: "#ede8e0", color: "#7a7570" }}
             >
-              {c}
-            </span>
-          ))}
+              {tPlantDetail("cancel")}
+            </button>
+            <button
+              onClick={handleSave}
+              disabled={saving}
+              className="flex-1 text-xs py-2 rounded-xl font-medium"
+              style={{ background: "#8fad8f", color: "#fff", opacity: saving ? 0.7 : 1 }}
+            >
+              {tPlantDetail("save")}
+            </button>
+          </div>
         </div>
-        <div className="text-right flex-shrink-0">
-          <p className="text-[10px]" style={{ color: "#b0aba5" }}>{formatRelative(entry.timestamp)}</p>
-          <p className="text-[10px]" style={{ color: "#d0cbc3" }}>{formatDate(entry.timestamp, locale)}</p>
-        </div>
-      </div>
+      ) : (
+        /* ── View mode ── */
+        <>
+          <div className="flex items-start justify-between gap-3 mb-2">
+            <div className="flex flex-wrap gap-1.5 flex-1">
+              {chips.map((c, i) => (
+                <span
+                  key={i}
+                  className="text-xs px-2 py-0.5 rounded-full"
+                  style={{ background: "#e8f0e8", color: "#5a8a5a" }}
+                >
+                  {c}
+                </span>
+              ))}
+            </div>
 
-      {/* Note */}
-      {entry.note && (
-        <p className="text-xs italic mb-3" style={{ color: "#7a7570" }}>
-          &ldquo;{entry.note}&rdquo;
-        </p>
-      )}
+            {/* Timestamp + action buttons */}
+            <div className="flex flex-col items-end gap-1 flex-shrink-0">
+              <p className="text-[10px]" style={{ color: "#b0aba5" }}>{formatRelative(entry.timestamp)}</p>
+              <p className="text-[10px]" style={{ color: "#d0cbc3" }}>{formatDate(entry.timestamp, locale)}</p>
+              <div className="flex gap-1 mt-0.5">
+                {/* Edit button */}
+                <button
+                  onClick={() => setIsEditing(true)}
+                  className="text-[10px] px-1.5 py-0.5 rounded-md transition-colors"
+                  style={{ color: "#b0aba5" }}
+                  title={tPlantDetail("editRecord")}
+                  aria-label={tPlantDetail("editRecord")}
+                >
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                  </svg>
+                </button>
+                {/* Delete button */}
+                <button
+                  onClick={handleDelete}
+                  className="text-[10px] px-1.5 py-0.5 rounded-md transition-colors"
+                  style={{ color: "#b0aba5" }}
+                  title={tPlantDetail("deleteRecord")}
+                  aria-label={tPlantDetail("deleteRecord")}
+                >
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
 
-      {/* Photo (first one only for timeline view) */}
-      {entry.photoIds[0] && (
-        <PhotoFromStore
-          photoId={entry.photoIds[0]}
-          alt=""
-          className="w-full rounded-xl mt-2 object-cover"
-          style={{ maxHeight: 200 }}
-          objectFit="cover"
-        />
+          {/* Note */}
+          {entry.note && (
+            <p className="text-xs italic mb-3" style={{ color: "#7a7570" }}>
+              &ldquo;{entry.note}&rdquo;
+            </p>
+          )}
+
+          {/* Photo (first one only for timeline view) */}
+          {entry.photoIds[0] && (
+            <PhotoFromStore
+              photoId={entry.photoIds[0]}
+              alt=""
+              className="w-full rounded-xl mt-2 object-cover"
+              style={{ maxHeight: 200 }}
+              objectFit="cover"
+            />
+          )}
+        </>
       )}
     </div>
   );
@@ -175,7 +399,7 @@ export default function PlantDetailPage({
   const t = useTranslations("plantDetail");
 
   const { plant, loading: plantLoading } = usePlant(id);
-  const { entries, loading: timelineLoading } = useTimeline(id);
+  const { entries, loading: timelineLoading, reload: reloadTimeline } = useTimeline(id);
 
   if (plantLoading) {
     return (
@@ -246,7 +470,13 @@ export default function PlantDetailPage({
           ) : (
             <div className="space-y-3">
               {entries.map((entry) => (
-                <TimelineCard key={entry.id} entry={entry} locale={locale} />
+                <TimelineCard
+                  key={entry.id}
+                  entry={entry}
+                  locale={locale}
+                  onDeleted={reloadTimeline}
+                  onUpdated={reloadTimeline}
+                />
               ))}
             </div>
           )}

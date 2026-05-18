@@ -35,6 +35,7 @@
     "recordButton": "+ 記録する",
     "daysAgo": "{days}日前",
     "today": "今日",
+    "yesterday": "昨日",
     "sevenDaysAgo": "7日前",
     "thirtyDaysAgo": "30日前",
     "firstDay": "最初の日",
@@ -74,7 +75,12 @@
     "timeline": "タイムライン",
     "noRecords": "まだ記録がありません",
     "growthSummary": "最近、明らかな変化があります",
-    "memoryAccumulating": "思い出を積み重ね中…"
+    "memoryAccumulating": "思い出を積み重ね中…",
+    "editRecord": "編集",
+    "deleteRecord": "削除",
+    "deleteRecordConfirm": "この記録を削除しますか？",
+    "save": "保存",
+    "cancel": "キャンセル"
   },
   "newcomer": {
     "title": "新しい植物を追加",

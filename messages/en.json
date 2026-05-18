@@ -35,6 +35,7 @@
     "recordButton": "+ Record",
     "daysAgo": "{days} days ago",
     "today": "Today",
+    "yesterday": "Yesterday",
     "sevenDaysAgo": "7 days ago",
     "thirtyDaysAgo": "30 days ago",
     "firstDay": "First Day",
@@ -74,7 +75,12 @@
     "timeline": "Timeline",
     "noRecords": "No records yet",
     "growthSummary": "Noticeable changes recently",
-    "memoryAccumulating": "Still building memories..."
+    "memoryAccumulating": "Still building memories...",
+    "editRecord": "Edit",
+    "deleteRecord": "Delete",
+    "deleteRecordConfirm": "Delete this record?",
+    "save": "Save",
+    "cancel": "Cancel"
   },
   "newcomer": {
     "title": "Add a Plant",

@@ -35,6 +35,7 @@
     "recordButton": "+ 记录",
     "daysAgo": "{days}天前",
     "today": "今天",
+    "yesterday": "昨天",
     "sevenDaysAgo": "7天前",
     "thirtyDaysAgo": "30天前",
     "firstDay": "第一天",
@@ -74,7 +75,12 @@
     "timeline": "时间线",
     "noRecords": "还没有记录",
     "growthSummary": "最近有明显变化",
-    "memoryAccumulating": "还在积累记忆中…"
+    "memoryAccumulating": "还在积累记忆中…",
+    "editRecord": "编辑",
+    "deleteRecord": "删除",
+    "deleteRecordConfirm": "确认删除这条记录？",
+    "save": "保存",
+    "cancel": "取消"
   },
   "newcomer": {
     "title": "新增植物",

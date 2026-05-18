@@ -247,8 +247,33 @@ export async function saveRecord(
 }
 
 export async function deleteRecord(id: string): Promise<void> {
-  const entries = loadTimeline().filter((e) => e.id !== id);
-  saveTimelineToLS(entries);
+  const allEntries = loadTimeline();
+  const target = allEntries.find((e) => e.id === id);
+  if (target && target.photoIds.length > 0) {
+    const db = await getDB();
+    await Promise.all(target.photoIds.map((pid) => db.delete("photos", pid)));
+  }
+  saveTimelineToLS(allEntries.filter((e) => e.id !== id));
+}
+
+export async function updateRecord(entry: {
+  id: string;
+  timestamp: string;
+  actions: ActionType[];
+  states: StateType[];
+  note?: string;
+}): Promise<void> {
+  const allEntries = loadTimeline();
+  const idx = allEntries.findIndex((e) => e.id === entry.id);
+  if (idx === -1) throw new Error(`Entry ${entry.id} not found`);
+  allEntries[idx] = {
+    ...allEntries[idx],
+    timestamp: entry.timestamp,
+    actions: entry.actions,
+    states: entry.states,
+    note: entry.note,
+  };
+  saveTimelineToLS(allEntries);
 }
 
 // ─── Photo API ────────────────────────────────────────────────────────────────
