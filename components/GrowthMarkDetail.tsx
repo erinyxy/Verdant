@@ -6,18 +6,21 @@
  * Per spec § 5.3:
  *   - Soft fade-in on mount
  *   - Close on backdrop click / X button / system back gesture
- *   - No download button (user takes a screenshot manually)
  *
- * Note: rendered as a regular React subtree (not a portal). The parent layout
- * applies `transform: translateZ(0)` on the phone frame, which makes fixed
- * descendants contained within the frame on desktop preview.
+ * The "no download button" rule from spec §9 was overridden by the
+ * product owner once users started seeing milestone cards as keepable
+ * mementos. We now offer:
+ *   - Save image button → html-to-image PNG → download (or Web Share
+ *     where supported, so iOS users can save to Photos directly).
  *
- * System back gesture is supported by pushing a history state on open and
- * listening for popstate.
+ * Note: rendered as a regular React subtree (not a portal). The parent
+ * layout applies `transform: translateZ(0)` on the phone frame, which
+ * makes fixed descendants contained within the frame on desktop preview.
  */
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
+import { toBlob } from "html-to-image";
 import GrowthMarkCard from "@/components/GrowthMarkCard";
 import type { GrowthMark, Plant } from "@/lib/dataStore";
 
@@ -27,22 +30,31 @@ interface Props {
   onClose: () => void;
 }
 
+function safeFileName(s: string): string {
+  // Strip path separators and weird chars, keep CJK / latin / numbers / dashes.
+  // Replace whitespace with underscore. Limit length.
+  return (
+    s
+      .normalize("NFC")
+      .replace(/[\s/\\?%*:|"<>]+/g, "_")
+      .replace(/^_+|_+$/g, "")
+      .slice(0, 40) || "plant"
+  );
+}
+
 export default function GrowthMarkDetail({ mark, plant, onClose }: Props) {
   const t = useTranslations("marks");
   const [visible, setVisible] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const cardWrapRef = useRef<HTMLDivElement>(null);
 
   // Fade-in on mount.
   useEffect(() => {
-    // next paint
     const id = requestAnimationFrame(() => setVisible(true));
     return () => cancelAnimationFrame(id);
   }, []);
 
   // Lock body scroll while open.
-  // Note: system back-gesture support intentionally not implemented —
-  // synchronous history.pushState + StrictMode double-mount creates a race
-  // where the async popstate from the dev-unmount cleanup hits the second
-  // mount's listener and closes the modal. Close-via-backdrop / X is enough.
   useEffect(() => {
     const prevOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
@@ -54,11 +66,62 @@ export default function GrowthMarkDetail({ mark, plant, onClose }: Props) {
   // Escape key to close.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape" && !saving) onClose();
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [onClose]);
+  }, [onClose, saving]);
+
+  async function handleSave() {
+    const node = cardWrapRef.current;
+    if (!node || saving) return;
+    setSaving(true);
+    try {
+      const blob = await toBlob(node, {
+        pixelRatio: 2, // crisp on retina
+        // Background matches the card's archive-ivory so saved PNGs aren't
+        // weirdly transparent in the rounded corners of the card.
+        backgroundColor: "#EFE5CE",
+        cacheBust: true,
+      });
+      if (!blob) throw new Error("toBlob returned null");
+
+      const filename = `verdant-${safeFileName(plant.nickname || plant.name)}-${mark.milestoneDays}days.png`;
+      const file = new File([blob], filename, { type: "image/png" });
+
+      // Web Share Level 2 (iOS Safari, Android Chrome) lets the user save
+      // directly to Photos via the system share sheet.
+      const nav = navigator as Navigator & {
+        canShare?: (data: ShareData) => boolean;
+      };
+      const canShareFile =
+        typeof nav.canShare === "function" && nav.canShare({ files: [file] });
+      if (canShareFile) {
+        try {
+          await navigator.share({ files: [file] });
+          return;
+        } catch (err) {
+          // User cancelled share — silently fall through to download fallback.
+          if ((err as { name?: string }).name === "AbortError") return;
+        }
+      }
+
+      // Fallback: trigger a regular download.
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      // Revoke after a tick so the browser can start the download.
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch (err) {
+      console.error("[verdant] save image failed:", err);
+    } finally {
+      setSaving(false);
+    }
+  }
 
   return (
     <div
@@ -72,32 +135,64 @@ export default function GrowthMarkDetail({ mark, plant, onClose }: Props) {
         opacity: visible ? 1 : 0,
         transition: "opacity 220ms ease-out",
       }}
-      onClick={onClose}
+      onClick={() => { if (!saving) onClose(); }}
     >
-      {/* Close button (top-right) */}
-      <button
-        type="button"
-        onClick={(e) => {
-          e.stopPropagation();
-          onClose();
-        }}
-        aria-label={t("close")}
-        className="absolute z-10 flex items-center justify-center rounded-full"
+      {/* Top-right controls: save (left) + close (right) */}
+      <div
+        className="absolute z-10 flex items-center gap-2"
         style={{
           top: "calc(env(safe-area-inset-top, 0px) + 12px)",
           right: 16,
-          width: 36,
-          height: 36,
-          background: "rgba(253, 250, 246, 0.92)",
-          color: "#3a3530",
-          boxShadow: "0 1px 6px rgba(0,0,0,0.12)",
         }}
+        onClick={(e) => e.stopPropagation()}
       >
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <line x1="6" y1="6" x2="18" y2="18" />
-          <line x1="6" y1="18" x2="18" y2="6" />
-        </svg>
-      </button>
+        <button
+          type="button"
+          onClick={handleSave}
+          disabled={saving}
+          aria-label={t("saveImage")}
+          className="flex items-center justify-center rounded-full transition-opacity active:opacity-70"
+          style={{
+            width: 36,
+            height: 36,
+            background: "rgba(253, 250, 246, 0.92)",
+            color: "#3a3530",
+            boxShadow: "0 1px 6px rgba(0,0,0,0.12)",
+            opacity: saving ? 0.6 : 1,
+          }}
+        >
+          {saving ? (
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="animate-spin">
+              <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+            </svg>
+          ) : (
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="7 10 12 15 17 10" />
+              <line x1="12" y1="15" x2="12" y2="3" />
+            </svg>
+          )}
+        </button>
+        <button
+          type="button"
+          onClick={onClose}
+          disabled={saving}
+          aria-label={t("close")}
+          className="flex items-center justify-center rounded-full transition-opacity active:opacity-70"
+          style={{
+            width: 36,
+            height: 36,
+            background: "rgba(253, 250, 246, 0.92)",
+            color: "#3a3530",
+            boxShadow: "0 1px 6px rgba(0,0,0,0.12)",
+          }}
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="6" y1="6" x2="18" y2="18" />
+            <line x1="6" y1="18" x2="18" y2="6" />
+          </svg>
+        </button>
+      </div>
 
       {/* Scrollable card content — clicking the card itself shouldn't close. */}
       <div
@@ -110,7 +205,10 @@ export default function GrowthMarkDetail({ mark, plant, onClose }: Props) {
           paddingRight: 16,
         }}
       >
-        <GrowthMarkCard mark={mark} plant={plant} onOpen={() => {}} detailMode />
+        {/* Card wrapper for html-to-image capture */}
+        <div ref={cardWrapRef}>
+          <GrowthMarkCard mark={mark} plant={plant} onOpen={() => {}} detailMode />
+        </div>
       </div>
     </div>
   );

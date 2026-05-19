@@ -115,6 +115,8 @@
     "empty": "Your first growth mark is on its way · {days} days to go",
     "emptyNoCountdown": "Your first growth mark is on its way",
     "close": "Close",
+    "saveImage": "Save image",
+    "saving": "Saving…",
     "caption": {
       "7days": "7 days together 🌿",
       "30days": "30 days together 🌿",

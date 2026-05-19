@@ -115,6 +115,8 @@
     "empty": "最初の記念はもうすぐ · あと {days} 日",
     "emptyNoCountdown": "最初の記念はもうすぐ",
     "close": "閉じる",
+    "saveImage": "画像を保存",
+    "saving": "保存中…",
     "caption": {
       "7days": "いっしょに 7 日 🌿",
       "30days": "いっしょに 30 日 🌿",

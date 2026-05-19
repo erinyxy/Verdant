@@ -115,6 +115,8 @@
     "empty": "第一枚生长大事记还在路上 · 再过 {days} 天",
     "emptyNoCountdown": "第一枚生长大事记还在路上",
     "close": "关闭",
+    "saveImage": "保存图片",
+    "saving": "保存中…",
     "caption": {
       "7days": "和你一起，7 天 🌿",
       "30days": "和你一起，30 天 🌿",
