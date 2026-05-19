@@ -1,10 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { useLocale } from "next-intl";
 import { seedIfEmpty } from "@/lib/seedData";
-
-type Locale = "en" | "ja" | "zh";
 
 /**
  * Client-side guard that seeds mock data on first mount.
@@ -12,13 +9,11 @@ type Locale = "en" | "ja" | "zh";
  * if data already exists in localStorage.
  */
 export default function SeedInit() {
-  const locale = useLocale() as Locale;
-
   useEffect(() => {
-    seedIfEmpty(locale).catch((err) => {
+    seedIfEmpty().catch((err) => {
       console.error("[verdant] seed failed:", err);
     });
-  }, [locale]);
+  }, []);
 
   return null;
 }

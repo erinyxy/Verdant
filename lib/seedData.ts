@@ -19,11 +19,9 @@ import {
   type Plant,
 } from "./dataStore";
 
-type Locale = "en" | "ja" | "zh";
-
 interface PlantSeed {
   key: string;
-  names: Record<Locale, string>;
+  name: string; // stored as-is, no locale translation (user-submitted content)
   nickname?: string;
   startedOn: string; // YYYY-MM-DD
   coverPhoto?: string; // path under /demo-photos/ (optional)
@@ -31,7 +29,7 @@ interface PlantSeed {
     date: string; // YYYY-MM-DD
     actions: ActionType[];
     states: StateType[];
-    note?: string | Record<Locale, string>; // string = same across all locales
+    note?: string; // stored as-is
     photo?: string; // path under /demo-photos/
   }>;
 }
@@ -39,7 +37,7 @@ interface PlantSeed {
 const PLANTS: PlantSeed[] = [
   {
     key: "rubber",
-    names: { en: "Rubber Tree", ja: "ゴムノキ", zh: "橡皮树" },
+    name: "ゴムノキ",
     startedOn: "2025-11-18",
     records: [
       {
@@ -103,13 +101,15 @@ const PLANTS: PlantSeed[] = [
         actions: ["water"],
         states: ["lookingBeautiful"],
         note: "40cmになった",
+        photo: "/demo-photos/rubber-r10-2026-05-17.jpg",
       },
     ],
   },
   {
     key: "tulip",
-    names: { en: "Tulip", ja: "チューリップ", zh: "郁金香" },
+    name: "チューリップ",
     startedOn: "2025-12-01",
+    coverPhoto: "/demo-photos/tulip-cover.jpg",
     records: [
       {
         date: "2026-01-15",
@@ -136,12 +136,33 @@ const PLANTS: PlantSeed[] = [
         states: ["blooming", "lookingBeautiful"],
         photo: "/demo-photos/tulip-r3-2026-04-07.jpg",
       },
+      {
+        date: "2026-04-14",
+        actions: [],
+        states: ["lookingBeautiful"],
+        photo: "/demo-photos/tulip-r4-2026-04-14.jpg",
+      },
+      {
+        date: "2026-04-20",
+        actions: [],
+        states: [],
+        note: "花が散った",
+        photo: "/demo-photos/tulip-r5-2026-04-20.jpg",
+      },
+      {
+        date: "2026-05-03",
+        actions: [],
+        states: [],
+        note: "ありがとう！さよなら💚",
+        photo: "/demo-photos/tulip-r6-2026-05-03.jpg",
+      },
     ],
   },
   {
     key: "daisy",
-    names: { en: "Osteospermum", ja: "オステオスペルマム", zh: "蓝眼菊" },
+    name: "オステオスペルマム",
     startedOn: "2026-02-15",
+    coverPhoto: "/demo-photos/daisy-cover.jpg",
     records: [
       {
         date: "2026-02-15",
@@ -184,8 +205,9 @@ const PLANTS: PlantSeed[] = [
   },
   {
     key: "pansyViola",
-    names: { en: "Pansy / Viola", ja: "パンジー・ビオラ", zh: "三色堇/角堇" },
+    name: "パンジー・ビオラ",
     startedOn: "2025-10-19",
+    coverPhoto: "/demo-photos/pansy-cover.jpg",
     records: [
       {
         date: "2025-10-26",
@@ -222,7 +244,7 @@ const PLANTS: PlantSeed[] = [
   },
   {
     key: "basil",
-    names: { en: "Basil", ja: "Basil", zh: "罗勒" },
+    name: "Basil",
     startedOn: "2026-04-24",
     records: [
       {
@@ -295,7 +317,7 @@ let _seedInFlight: Promise<void> | null = null;
  * Dispatches "verdant:seeded" on window when new data is ready,
  * so any mounted hooks can re-fetch without a full page reload.
  */
-export async function seedIfEmpty(locale: Locale): Promise<boolean> {
+export async function seedIfEmpty(): Promise<boolean> {
   if (typeof window === "undefined") return false; // never seed during SSR
 
   // 1. Module-level guard (same JS instance, e.g. StrictMode double-effect)
@@ -315,7 +337,7 @@ export async function seedIfEmpty(locale: Locale): Promise<boolean> {
   // Claim the lock
   localStorage.setItem(LS_SEEDING_KEY, String(Date.now()));
 
-  _seedInFlight = runSeed(locale).finally(() => {
+  _seedInFlight = runSeed().finally(() => {
     localStorage.removeItem(LS_SEEDING_KEY);
     _seedInFlight = null;
   });
@@ -327,11 +349,11 @@ export async function seedIfEmpty(locale: Locale): Promise<boolean> {
   return true;
 }
 
-async function runSeed(locale: Locale): Promise<void> {
+async function runSeed(): Promise<void> {
   for (const seed of PLANTS) {
     // 1. Create plant (no coverPhotoId yet)
     const plant: Plant = await savePlant({
-      name: seed.names[locale],
+      name: seed.name,
       nickname: seed.nickname,
       startedOn: seed.startedOn,
     });
@@ -354,8 +376,7 @@ async function runSeed(locale: Locale): Promise<void> {
         if (!firstPhotoId) firstPhotoId = photo.id;
       }
 
-      // note can be a locale-specific Record or a plain string (user input, locale-invariant)
-      const note = typeof r.note === "string" ? r.note : r.note?.[locale];
+      const note = r.note;
 
       await saveRecord({
         plantId: plant.id,
