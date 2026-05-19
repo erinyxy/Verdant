@@ -24,7 +24,13 @@ interface PlantSeed {
   name: string; // stored as-is, no locale translation (user-submitted content)
   nickname?: string;
   startedOn: string; // YYYY-MM-DD
-  coverPhoto?: string; // path under /demo-photos/ (optional)
+  /** Representative "day 1" photo (the plant at its start). Stored as a normal
+   *  timeline photo at startedOn (NOT isCover), so it surfaces as Growth Compare
+   *  "First Day" and the Milestone firstPhoto event. Inserted before records so
+   *  it wins same-day timestamp ties.
+   *  If coverPhoto is absent, this photo also becomes the avatar. */
+  dayOnePhoto?: string; // path under /demo-photos/
+  coverPhoto?: string; // avatar override (isCover=true); path under /demo-photos/
   records: Array<{
     date: string; // YYYY-MM-DD
     actions: ActionType[];
@@ -109,6 +115,7 @@ const PLANTS: PlantSeed[] = [
     key: "tulip",
     name: "チューリップ",
     startedOn: "2025-12-01",
+    dayOnePhoto: "/demo-photos/tulip-day1.jpg",
     coverPhoto: "/demo-photos/tulip-cover.jpg",
     records: [
       {
@@ -162,7 +169,9 @@ const PLANTS: PlantSeed[] = [
     key: "daisy",
     name: "オステオスペルマム",
     startedOn: "2026-02-15",
-    coverPhoto: "/demo-photos/daisy-cover.jpg",
+    // day-1 photo == the avatar image here (user submitted one photo); no
+    // separate cover, so dayOnePhoto doubles as the avatar.
+    dayOnePhoto: "/demo-photos/daisy-cover.jpg",
     records: [
       {
         date: "2026-02-15",
@@ -207,6 +216,7 @@ const PLANTS: PlantSeed[] = [
     key: "pansyViola",
     name: "パンジー・ビオラ",
     startedOn: "2025-10-19",
+    dayOnePhoto: "/demo-photos/pansy-day1.jpg",
     coverPhoto: "/demo-photos/pansy-cover.jpg",
     records: [
       {
@@ -358,8 +368,22 @@ async function runSeed(): Promise<void> {
       startedOn: seed.startedOn,
     });
 
-    // 2. Create timeline records; track first saved photo for auto-cover
-    let firstPhotoId: string | undefined;
+    // 2a. Day-1 photo (inserted FIRST so it wins same-day timestamp ties and
+    //     becomes Growth Compare "First Day" / Milestone firstPhoto).
+    //     Stored as a normal (non-cover) photo at startedOn.
+    let dayOnePhotoId: string | undefined;
+    if (seed.dayOnePhoto) {
+      const dataUrl = await fetchAsDataUrl(seed.dayOnePhoto);
+      const photo = await savePhoto({
+        plantId: plant.id,
+        timestamp: new Date(seed.startedOn).toISOString(),
+        dataUrl,
+      });
+      dayOnePhotoId = photo.id;
+    }
+
+    // 2b. Create timeline records; track first saved photo for auto-cover
+    let firstPhotoId: string | undefined = dayOnePhotoId;
 
     for (const r of seed.records) {
       const timestamp = new Date(r.date).toISOString();
