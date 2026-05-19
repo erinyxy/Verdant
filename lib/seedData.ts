@@ -151,7 +151,7 @@ const PLANTS: PlantSeed[] = [
       },
       {
         date: "2026-05-03",
-        actions: [],
+        actions: ["sayGoodbye"],
         states: [],
         note: "ありがとう！さよなら💚",
         photo: "/demo-photos/tulip-r6-2026-05-03.jpg",
