@@ -57,6 +57,13 @@ export interface Photo {
   timestamp: string; // ISO 8601
   dataUrl: string; // base64 data URL — use <img src={dataUrl}> not background-image
   thumbnailUrl?: string; // compressed version for list views
+  /** True for photos that exist ONLY to serve as a plant cover (not part of
+   *  the timeline). Excluded by default from getPhotosByPlant / getPhotoNearDate
+   *  so Growth Compare "First Day" and Milestone firstPhoto events use real
+   *  timeline photos, not the avatar.
+   *  Photos that double as both cover AND a timeline entry (e.g. the user's
+   *  first upload via Newcomer) leave this `undefined`. */
+  isCover?: boolean;
 }
 
 // ─── GrowthMark types ─────────────────────────────────────────────────────────
@@ -344,10 +351,18 @@ export async function getPhoto(id: string): Promise<Photo | null> {
   return db.get("photos", id) ?? null;
 }
 
-export async function getPhotosByPlant(plantId: string): Promise<Photo[]> {
+/** Get all photos for a plant, sorted newest-first.
+ *  By default, photos flagged `isCover` are excluded — they live on the
+ *  plant only as the avatar and shouldn't pollute timeline / "first day"
+ *  queries. Pass `{ includeCover: true }` to see them (e.g. cover picker). */
+export async function getPhotosByPlant(
+  plantId: string,
+  opts: { includeCover?: boolean } = {}
+): Promise<Photo[]> {
   const db = await getDB();
   const photos: Photo[] = await db.getAllFromIndex("photos", "plantId", plantId);
-  return photos.sort(
+  const filtered = opts.includeCover ? photos : photos.filter((p) => !p.isCover);
+  return filtered.sort(
     (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
   );
 }

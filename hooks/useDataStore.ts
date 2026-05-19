@@ -109,13 +109,19 @@ export function usePhoto(photoId: string | undefined | null) {
 
 // ─── usePhotosByPlant ─────────────────────────────────────────────────────────
 
-export function usePhotosByPlant(plantId: string) {
+/** Photos for a plant. By default excludes cover-only photos; pass
+ *  `{ includeCover: true }` to include them (e.g. for the cover picker). */
+export function usePhotosByPlant(
+  plantId: string,
+  opts: { includeCover?: boolean } = {}
+) {
   const [photos, setPhotos] = useState<Photo[]>([]);
+  const includeCover = !!opts.includeCover;
 
   useEffect(() => {
     if (!plantId) return;
-    getPhotosByPlant(plantId).then(setPhotos);
-  }, [plantId]);
+    getPhotosByPlant(plantId, { includeCover }).then(setPhotos);
+  }, [plantId, includeCover]);
 
   return photos;
 }

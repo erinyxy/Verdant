@@ -399,6 +399,10 @@ async function runSeed(): Promise<void> {
           plantId: plant.id,
           timestamp: new Date(seed.startedOn).toISOString(),
           dataUrl: coverDataUrl,
+          // Mark as cover-only so it doesn't pollute Growth Compare "First Day"
+          // or Milestone firstPhoto queries (those use getPhotosByPlant's
+          // default behavior which excludes isCover photos).
+          isCover: true,
         });
         coverPhotoId = coverPhoto.id;
       }

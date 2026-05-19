@@ -31,7 +31,9 @@ interface Props {
 export default function CoverPhotoPicker({ plant, onClose, onPicked }: Props) {
   const t = useTranslations("plantDetail");
   const tMarks = useTranslations("marks"); // for the close label, already translated
-  const photos = usePhotosByPlant(plant.id);
+  // Include cover-only photos so the current avatar is visible/selectable
+  // (and so the user can revert if they swapped to a record photo).
+  const photos = usePhotosByPlant(plant.id, { includeCover: true });
 
   const [visible, setVisible] = useState(false);
   const [saving, setSaving] = useState(false);
