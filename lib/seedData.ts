@@ -40,7 +40,6 @@ const PLANTS: PlantSeed[] = [
   {
     key: "rubber",
     names: { en: "Rubber Tree", ja: "ゴムノキ", zh: "橡皮树" },
-    nickname: "gogo",
     startedOn: "2025-11-18",
     records: [
       {
@@ -142,7 +141,6 @@ const PLANTS: PlantSeed[] = [
   {
     key: "daisy",
     names: { en: "Osteospermum", ja: "オステオスペルマム", zh: "蓝眼菊" },
-    nickname: "Fay",
     startedOn: "2026-02-15",
     records: [
       {
@@ -338,26 +336,9 @@ async function runSeed(locale: Locale): Promise<void> {
       startedOn: seed.startedOn,
     });
 
-    // 2. Fetch and save cover photo (optional)
-    if (seed.coverPhoto) {
-      const coverDataUrl = await fetchAsDataUrl(seed.coverPhoto);
-      const coverPhoto = await savePhoto({
-        plantId: plant.id,
-        timestamp: new Date(seed.startedOn).toISOString(),
-        dataUrl: coverDataUrl,
-      });
+    // 2. Create timeline records; track first saved photo for auto-cover
+    let firstPhotoId: string | undefined;
 
-      // 3. Update plant with coverPhotoId
-      await savePlant({
-        id: plant.id,
-        name: plant.name,
-        nickname: plant.nickname,
-        startedOn: plant.startedOn,
-        coverPhotoId: coverPhoto.id,
-      });
-    }
-
-    // 4. Create timeline records
     for (const r of seed.records) {
       const timestamp = new Date(r.date).toISOString();
       let photoIds: string[] = [];
@@ -370,6 +351,7 @@ async function runSeed(locale: Locale): Promise<void> {
           dataUrl,
         });
         photoIds = [photo.id];
+        if (!firstPhotoId) firstPhotoId = photo.id;
       }
 
       // note can be a locale-specific Record or a plain string (user input, locale-invariant)
@@ -382,6 +364,29 @@ async function runSeed(locale: Locale): Promise<void> {
         states: r.states,
         photoIds,
         note,
+      });
+    }
+
+    // 3. Set cover photo: explicit coverPhoto field takes priority,
+    //    otherwise fall back to the first timeline photo.
+    const coverPath = seed.coverPhoto;
+    if (coverPath || firstPhotoId) {
+      let coverPhotoId = firstPhotoId;
+      if (coverPath) {
+        const coverDataUrl = await fetchAsDataUrl(coverPath);
+        const coverPhoto = await savePhoto({
+          plantId: plant.id,
+          timestamp: new Date(seed.startedOn).toISOString(),
+          dataUrl: coverDataUrl,
+        });
+        coverPhotoId = coverPhoto.id;
+      }
+      await savePlant({
+        id: plant.id,
+        name: plant.name,
+        nickname: plant.nickname,
+        startedOn: plant.startedOn,
+        coverPhotoId,
       });
     }
   }
