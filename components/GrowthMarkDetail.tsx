@@ -77,13 +77,58 @@ export default function GrowthMarkDetail({ mark, plant, onClose }: Props) {
     if (!node || saving) return;
     setSaving(true);
     try {
-      const blob = await toBlob(node, {
+      // 1. Make sure every <img> in the card is fully decoded. Otherwise
+      //    html-to-image clones them before they paint and the exported PNG
+      //    has the text but blank images.
+      const imgs = Array.from(node.querySelectorAll("img"));
+      await Promise.all(
+        imgs.map((img) => {
+          if (img.complete && img.naturalWidth > 0) return Promise.resolve();
+          return new Promise<void>((resolve) => {
+            const done = () => resolve();
+            img.addEventListener("load", done, { once: true });
+            img.addEventListener("error", done, { once: true });
+          });
+        })
+      );
+      // Best-effort decode (no-op if unsupported).
+      await Promise.all(imgs.map((img) => img.decode().catch(() => {})));
+
+      // 2. The card's grain-noise background uses an feTurbulence SVG data-URI.
+      //    html-to-image can't rasterize SVG filters and renders them as a dark
+      //    block, swallowing the ivory card. Temporarily strip those noise
+      //    backgrounds for the capture (the solid backgroundColor underneath
+      //    stays), then restore. Targets any element whose inline background
+      //    image is an SVG data-URI.
+      const noiseEls = (
+        Array.from(node.querySelectorAll<HTMLElement>("*")) as HTMLElement[]
+      ).filter((el) => el.style.backgroundImage.includes("data:image/svg"));
+      const saved = noiseEls.map((el) => el.style.backgroundImage);
+      noiseEls.forEach((el) => {
+        el.style.backgroundImage = "none";
+      });
+
+      const opts = {
         pixelRatio: 2, // crisp on retina
         // Background matches the card's archive-ivory so saved PNGs aren't
         // weirdly transparent in the rounded corners of the card.
         backgroundColor: "#EFE5CE",
         cacheBust: true,
-      });
+      };
+
+      let blob: Blob | null;
+      try {
+        // 3. html-to-image has a well-known first-pass timing bug where cloned
+        //    images render blank. A throwaway warm-up pass primes the clone,
+        //    then the real pass captures everything.
+        await toBlob(node, opts).catch(() => null);
+        blob = await toBlob(node, opts);
+      } finally {
+        // Restore the noise backgrounds regardless of outcome.
+        noiseEls.forEach((el, i) => {
+          el.style.backgroundImage = saved[i];
+        });
+      }
       if (!blob) throw new Error("toBlob returned null");
 
       const filename = `verdant-${safeFileName(plant.nickname || plant.name)}-${mark.milestoneDays}days.png`;
