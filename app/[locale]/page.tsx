@@ -9,6 +9,8 @@ import { getRecordsByPlant, getPhotosByPlant, getPhotoNearDate, type Plant, type
 import PhotoFromStore from "@/components/PhotoFromStore";
 import PhotoCompare from "@/components/PhotoCompare";
 import LocaleSwitcher from "@/components/LocaleSwitcher";
+import SampleDataBanner from "@/components/SampleDataBanner";
+import FirstPlantEmptyState from "@/components/FirstPlantEmptyState";
 
 // A timeline entry enriched with its parent plant (for cross-plant display).
 type RichEntry = TimelineEntry & { plant: Plant };
@@ -215,6 +217,14 @@ export default function HomePage() {
         <LocaleSwitcher />
       </div>
 
+      {/* Sample-data note (only while seeded sample data exists) */}
+      <SampleDataBanner />
+
+      {/* Empty state — no plants (fresh start / after clearing sample data) */}
+      {!loading && plants.length === 0 ? (
+        <FirstPlantEmptyState />
+      ) : (
+      <>
       {/* Recent Activity */}
       <section className="mb-5">
         <h2 className="text-xs uppercase tracking-widest mb-3" style={{ color: "#9a948e" }}>
@@ -294,6 +304,8 @@ export default function HomePage() {
           </>
         )}
       </section>
+      </>
+      )}
 
       {/* Brand footer — Wordmark + Growth Mark */}
       <div className="mt-12 mb-0 flex flex-col items-center gap-3 select-none" aria-hidden="true">

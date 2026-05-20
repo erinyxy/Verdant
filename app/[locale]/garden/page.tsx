@@ -16,6 +16,8 @@ import Link from "next/link";
 import { usePlants } from "@/hooks/useDataStore";
 import { getRecordsByPlant, getTogetherDays, type Plant, type TimelineEntry } from "@/lib/dataStore";
 import PhotoFromStore from "@/components/PhotoFromStore";
+import SampleDataBanner from "@/components/SampleDataBanner";
+import FirstPlantEmptyState from "@/components/FirstPlantEmptyState";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -101,15 +103,18 @@ export default function GardenPage() {
           + {tHome("addPlant")}
         </Link>
       </div>
-      <p className="text-sm mb-8 pl-1" style={{ color: "#9a948e" }}>
+      <p className="text-sm mb-6 pl-1" style={{ color: "#9a948e" }}>
         {t("subtitle")}
       </p>
+
+      {/* Sample-data note (only while seeded sample data exists) */}
+      <SampleDataBanner />
 
       {/* ── Content ── */}
       {isLoading ? (
         <LoadingSkeletons />
       ) : plants.length === 0 ? (
-        <EmptyState locale={locale} />
+        <FirstPlantEmptyState />
       ) : (() => {
         const activeRows = rows.filter((r) => !r.plant.endedAt);
         const pastRows = rows.filter((r) => r.plant.endedAt);
@@ -293,54 +298,6 @@ function PlantCard({ plant, days, latestEntry, locale, isPast = false }: CardPro
         <path d="M9 18l6-6-6-6" />
       </svg>
     </Link>
-  );
-}
-
-// ─── Empty state ──────────────────────────────────────────────────────────────
-
-function EmptyState({ locale }: { locale: string }) {
-  const t = useTranslations("garden");
-  return (
-    <div className="flex flex-col items-center text-center pt-16 px-4">
-      {/* Simple pot illustration */}
-      <svg
-        width="64"
-        height="64"
-        viewBox="0 0 64 64"
-        fill="none"
-        stroke="#b8c9b8"
-        strokeWidth="1.2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        aria-hidden="true"
-      >
-        {/* Stem */}
-        <path d="M32 36 C32 28, 32 22, 32 14" />
-        {/* Left leaf */}
-        <path d="M32 22 C26 16, 18 16, 18 22 C24 24, 30 22, 32 22 Z" />
-        {/* Right leaf */}
-        <path d="M32 18 C38 12, 46 12, 46 18 C40 20, 34 18, 32 18 Z" />
-        {/* Pot rim */}
-        <path d="M20 38 Q20 36 24 36 L40 36 Q44 36 44 38 L44 40 Q44 42 40 42 L24 42 Q20 42 20 40 Z" />
-        {/* Pot body */}
-        <path d="M24 42 L22 54 Q22 56 26 56 L38 56 Q42 56 42 54 L40 42 Z" />
-      </svg>
-
-      <p
-        className="text-base mt-6 font-medium"
-        style={{ color: "#9a948e" }}
-      >
-        {t("emptyTitle")}
-      </p>
-
-      <Link
-        href={`/${locale}/newcomer`}
-        className="mt-4 text-sm px-5 py-2 rounded-full transition-opacity active:opacity-70"
-        style={{ background: "#e8f0e8", color: "#6B8B66" }}
-      >
-        + {t("emptyCta")}
-      </Link>
-    </div>
   );
 }
 

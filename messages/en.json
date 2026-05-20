@@ -4,6 +4,18 @@
     "garden": "My Garden",
     "milestones": "Milestones"
   },
+  "sample": {
+    "banner": "This is sample data to help you explore Verdant. Clear it anytime and start recording your own plants.",
+    "dismiss": "Dismiss",
+    "clear": "Clear sample data",
+    "clearConfirm": "Clear all sample plants and their records? This can't be undone.",
+    "confirm": "Clear",
+    "cancel": "Cancel"
+  },
+  "firstPlant": {
+    "title": "Start with your first plant 🌿",
+    "body": "Take a photo and record its first day."
+  },
   "garden": {
     "title": "My Garden",
     "subtitle": "My little green world",

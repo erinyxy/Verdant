@@ -30,8 +30,11 @@ function DevResetInner() {
     }
     setBusy(true);
     try {
-      // Also clear the seeding lock so seed can re-run
+      // Clear locks + sample-data flags so seed can re-run on reload
       localStorage.removeItem("verdant:seeding");
+      localStorage.removeItem("verdant:cleared");
+      localStorage.removeItem("verdant:sampleData");
+      localStorage.removeItem("verdant:sampleBannerDismissed");
       await clearAllData();
       window.location.reload();
     } catch (err) {

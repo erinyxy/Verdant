@@ -4,6 +4,18 @@
     "garden": "我的花园",
     "milestones": "大事记"
   },
+  "sample": {
+    "banner": "这是示例数据，用来帮你感受 Verdant 的记录方式。清除后，就可以开始记录你自己的植物。",
+    "dismiss": "关闭",
+    "clear": "清除示例数据",
+    "clearConfirm": "清除所有示例植物和记录？此操作无法撤销。",
+    "confirm": "清除",
+    "cancel": "取消"
+  },
+  "firstPlant": {
+    "title": "从第一株植物开始 🌿",
+    "body": "拍一张照片，记录它来到你身边的第一天。"
+  },
   "garden": {
     "title": "我的花园",
     "subtitle": "我的绿色小世界",

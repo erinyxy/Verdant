@@ -11,6 +11,8 @@
 
 import {
   isDataSeeded,
+  hasUserCleared,
+  markSampleData,
   savePlant,
   saveRecord,
   savePhoto,
@@ -330,6 +332,9 @@ let _seedInFlight: Promise<void> | null = null;
 export async function seedIfEmpty(): Promise<boolean> {
   if (typeof window === "undefined") return false; // never seed during SSR
 
+  // 0. The user cleared the sample data — respect that and stay empty.
+  if (hasUserCleared()) return false;
+
   // 1. Module-level guard (same JS instance, e.g. StrictMode double-effect)
   if (_seedInFlight) { await _seedInFlight; return false; }
 
@@ -353,6 +358,9 @@ export async function seedIfEmpty(): Promise<boolean> {
   });
 
   await _seedInFlight;
+
+  // Mark this dataset as sample data so the UI can show the sample banner.
+  markSampleData();
 
   // Notify all mounted hooks that fresh data is available
   window.dispatchEvent(new Event("verdant:seeded"));

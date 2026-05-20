@@ -110,6 +110,10 @@ export interface GrowthMark {
 const LS_PLANTS_KEY = "verdant:plants";
 const LS_TIMELINE_KEY = "verdant:timeline";
 const LS_MARKS_KEY = "verdant:marks";
+// Marks the current dataset as seeded sample data (set by seedData).
+const LS_SAMPLE_KEY = "verdant:sampleData";
+// Set once the user clears sample data, so seedData won't re-seed.
+const LS_CLEARED_KEY = "verdant:cleared";
 
 // ─── IndexedDB setup ─────────────────────────────────────────────────────────
 
@@ -642,4 +646,34 @@ export async function clearAllData(): Promise<void> {
 
 export async function isDataSeeded(): Promise<boolean> {
   return loadPlants().length > 0;
+}
+
+// ─── Sample data lifecycle ────────────────────────────────────────────────────
+
+/** Is the current dataset the seeded sample data? */
+export function isSampleData(): boolean {
+  if (typeof window === "undefined") return false;
+  return localStorage.getItem(LS_SAMPLE_KEY) === "1";
+}
+
+/** Called by seedData right after seeding completes. */
+export function markSampleData(): void {
+  if (typeof window === "undefined") return;
+  localStorage.setItem(LS_SAMPLE_KEY, "1");
+}
+
+/** Has the user intentionally cleared sample data? If so, seedData must NOT
+ *  re-seed (otherwise the sample plants would reappear on next load). */
+export function hasUserCleared(): boolean {
+  if (typeof window === "undefined") return false;
+  return localStorage.getItem(LS_CLEARED_KEY) === "1";
+}
+
+/** Clear all sample data and remember the user's choice so it won't re-seed.
+ *  Distinct from clearAllData(): this is the user-facing "start fresh" action. */
+export async function clearSampleData(): Promise<void> {
+  await clearAllData();
+  localStorage.removeItem(LS_SAMPLE_KEY);
+  localStorage.removeItem("verdant:sampleBannerDismissed");
+  localStorage.setItem(LS_CLEARED_KEY, "1");
 }
