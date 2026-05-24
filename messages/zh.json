@@ -16,6 +16,16 @@
     "title": "从第一株植物开始 🌿",
     "body": "拍一张照片，记录它来到你身边的第一天。"
   },
+  "backup": {
+    "menuLabel": "数据与备份",
+    "export": "导出备份",
+    "import": "从备份恢复",
+    "importConfirm": "用这个备份恢复？将替换当前所有植物和记录。",
+    "confirm": "恢复",
+    "cancel": "取消",
+    "invalidFile": "这看起来不是 Verdant 的备份文件。",
+    "exportHint": "把你所有的植物、记录和照片保存成一个文件。"
+  },
   "garden": {
     "title": "我的花园",
     "subtitle": "我的绿色小世界",

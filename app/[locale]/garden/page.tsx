@@ -18,6 +18,7 @@ import { getRecordsByPlant, getTogetherDays, type Plant, type TimelineEntry } fr
 import PhotoFromStore from "@/components/PhotoFromStore";
 import SampleDataBanner from "@/components/SampleDataBanner";
 import FirstPlantEmptyState from "@/components/FirstPlantEmptyState";
+import DataMenu from "@/components/DataMenu";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -95,13 +96,16 @@ export default function GardenPage() {
         >
           {t("title")}
         </h1>
-        <Link
-          href={`/${locale}/newcomer`}
-          className="text-xs px-3 py-1.5 rounded-full transition-opacity active:opacity-70 flex-shrink-0 mt-1"
-          style={{ background: "#e8f0e8", color: "#6B8B66" }}
-        >
-          + {tHome("addPlant")}
-        </Link>
+        <div className="flex items-center gap-1.5 flex-shrink-0 mt-1">
+          <Link
+            href={`/${locale}/newcomer`}
+            className="text-xs px-3 py-1.5 rounded-full transition-opacity active:opacity-70"
+            style={{ background: "#e8f0e8", color: "#6B8B66" }}
+          >
+            + {tHome("addPlant")}
+          </Link>
+          <DataMenu />
+        </div>
       </div>
       <p className="text-sm mb-6 pl-1" style={{ color: "#9a948e" }}>
         {t("subtitle")}

@@ -10,6 +10,12 @@ import { seedIfEmpty } from "@/lib/seedData";
  */
 export default function SeedInit() {
   useEffect(() => {
+    // Ask the browser to keep our data "persistent" so it's far less likely
+    // to be evicted under storage pressure. Best-effort; ignored if denied.
+    if (typeof navigator !== "undefined" && navigator.storage?.persist) {
+      navigator.storage.persist().catch(() => {});
+    }
+
     seedIfEmpty().catch((err) => {
       console.error("[verdant] seed failed:", err);
     });

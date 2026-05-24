@@ -677,3 +677,58 @@ export async function clearSampleData(): Promise<void> {
   localStorage.removeItem("verdant:sampleBannerDismissed");
   localStorage.setItem(LS_CLEARED_KEY, "1");
 }
+
+// ─── Backup: export / import ──────────────────────────────────────────────────
+
+export interface BackupFile {
+  app: "verdant";
+  version: 1;
+  exportedAt: string; // ISO 8601
+  plants: Plant[];
+  timeline: TimelineEntry[];
+  marks: GrowthMark[];
+  photos: Photo[]; // full records incl. base64 dataUrl
+}
+
+/** Gather everything (metadata + all photos) into one lossless object. */
+export async function exportBackup(): Promise<BackupFile> {
+  const db = await getDB();
+  const photos: Photo[] = await db.getAll("photos");
+  return {
+    app: "verdant",
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    plants: loadPlants(),
+    timeline: loadTimeline(),
+    marks: loadMarks(),
+    photos,
+  };
+}
+
+/** Restore from a backup object. OVERWRITES all current data.
+ *  Throws if the object isn't a recognizable Verdant backup. */
+export async function importBackup(data: unknown): Promise<void> {
+  if (!data || typeof data !== "object") throw new Error("Invalid backup file");
+  const d = data as Partial<BackupFile>;
+  if (d.app !== "verdant" || !Array.isArray(d.plants)) {
+    throw new Error("Not a Verdant backup");
+  }
+
+  // Wipe current data, then write the backup in.
+  await clearAllData();
+  savePlantsToLS(d.plants ?? []);
+  saveTimelineToLS(d.timeline ?? []);
+  saveMarksToLS(d.marks ?? []);
+
+  const db = await getDB();
+  const tx = db.transaction("photos", "readwrite");
+  for (const photo of d.photos ?? []) {
+    tx.store.put(photo);
+  }
+  await tx.done;
+
+  // This is now user-managed data: never auto-seed over it, no sample banner.
+  localStorage.removeItem(LS_SAMPLE_KEY);
+  localStorage.removeItem("verdant:sampleBannerDismissed");
+  localStorage.setItem(LS_CLEARED_KEY, "1");
+}

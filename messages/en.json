@@ -16,6 +16,16 @@
     "title": "Start with your first plant 🌿",
     "body": "Take a photo and record its first day."
   },
+  "backup": {
+    "menuLabel": "Data & backup",
+    "export": "Export backup",
+    "import": "Restore from backup",
+    "importConfirm": "Restore from this backup? It will replace all current plants and records.",
+    "confirm": "Restore",
+    "cancel": "Cancel",
+    "invalidFile": "That doesn't look like a Verdant backup file.",
+    "exportHint": "Saves all your plants, records and photos to one file."
+  },
   "garden": {
     "title": "My Garden",
     "subtitle": "My little green world",
