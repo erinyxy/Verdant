@@ -307,15 +307,16 @@ export default function GrowthMarkCard({
           </div>
 
           {/* Brand watermark — quiet "this is from Verdant" mark on the
-              saved/shared image. Same growth-mark glyph used in the Home
-              brand footer. */}
+              saved/shared image. Uses the V app icon (the actual brand
+              mark), pre-rendered at 96px for HiDPI sharpness when the
+              card is exported at pixelRatio 3 (32 CSS px × 3 = 96). */}
           <img
-            src="/icons/growth-mark-transparent-256.png"
+            src="/icons/brand-v-96.png"
             alt=""
-            width={24}
-            height={24}
+            width={32}
+            height={32}
             aria-hidden="true"
-            style={{ opacity: 0.55, flexShrink: 0 }}
+            style={{ opacity: 0.75, flexShrink: 0 }}
           />
         </div>
       </footer>
