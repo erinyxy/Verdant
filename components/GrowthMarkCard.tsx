@@ -306,17 +306,17 @@ export default function GrowthMarkCard({
             </p>
           </div>
 
-          {/* Brand watermark — quiet "this is from Verdant" mark on the
-              saved/shared image. Uses the V app icon (the actual brand
-              mark), pre-rendered at 96px for HiDPI sharpness when the
-              card is exported at pixelRatio 3 (32 CSS px × 3 = 96). */}
+          {/* Brand watermark — the V app icon as a quiet "this is from
+              Verdant" stamp. Source is the 192px PWA icon (already cached
+              by the browser for the manifest); at 44 CSS px × 3x retina
+              that's 132 device px, well within the source resolution. */}
           <img
-            src="/icons/brand-v-96.png"
+            src="/icons/icon-192.png"
             alt=""
-            width={32}
-            height={32}
+            width={44}
+            height={44}
             aria-hidden="true"
-            style={{ opacity: 0.75, flexShrink: 0 }}
+            style={{ opacity: 0.85, flexShrink: 0 }}
           />
         </div>
       </footer>
