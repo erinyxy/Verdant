@@ -171,9 +171,15 @@ export default function HomePage() {
     );
 
     // Merge entries from all plants, sort newest-first.
+    // Same-timestamp tiebreak by id desc so a more recently added record
+    // shows above an older one on the same calendar day.
     const merged: RichEntry[] = results
       .flatMap(({ plant, entries }) => entries.map((e) => ({ ...e, plant })))
-      .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+      .sort((a, b) => {
+        const tDiff = new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime();
+        if (tDiff !== 0) return tDiff;
+        return b.id.localeCompare(a.id);
+      });
 
     setRecentEntries(merged.slice(0, 3));
 

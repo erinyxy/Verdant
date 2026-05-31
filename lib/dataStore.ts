@@ -221,7 +221,15 @@ export async function deletePlant(id: string): Promise<void> {
 export async function getRecordsByPlant(plantId: string): Promise<TimelineEntry[]> {
   return loadTimeline()
     .filter((e) => e.plantId === plantId)
-    .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+    .sort((a, b) => {
+      const tDiff = new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime();
+      if (tDiff !== 0) return tDiff;
+      // Same timestamp (e.g. two records on the same calendar day) — break the
+      // tie by id (which embeds Date.now() of insertion) so the more recently
+      // added record appears first. Without this, stable sort would surface
+      // the OLDER insertion first, which feels backwards.
+      return b.id.localeCompare(a.id);
+    });
 }
 
 export async function getRecordsBetween(start: Date, end: Date): Promise<TimelineEntry[]> {
@@ -319,8 +327,9 @@ export async function updateRecord(entry: {
   const allEntries = loadTimeline();
   const idx = allEntries.findIndex((e) => e.id === entry.id);
   if (idx === -1) throw new Error(`Entry ${entry.id} not found`);
+  const prev = allEntries[idx];
   allEntries[idx] = {
-    ...allEntries[idx],
+    ...prev,
     timestamp: entry.timestamp,
     actions: entry.actions,
     states: entry.states,
@@ -329,6 +338,22 @@ export async function updateRecord(entry: {
   saveTimelineToLS(allEntries);
   // Action set or timestamp may have changed — reconcile.
   reconcilePlantEndedAt(allEntries[idx].plantId);
+
+  // If the record's date changed, the attached photos should follow. Otherwise
+  // Growth Compare / Milestone period queries (which look up photos by their
+  // own timestamp) will still see the photos at the OLD date.
+  if (prev.timestamp !== entry.timestamp && prev.photoIds.length > 0) {
+    const db = await getDB();
+    const tx = db.transaction("photos", "readwrite");
+    for (const pid of prev.photoIds) {
+      const photo = await tx.store.get(pid);
+      if (photo) {
+        photo.timestamp = entry.timestamp;
+        await tx.store.put(photo);
+      }
+    }
+    await tx.done;
+  }
 }
 
 // ─── Plant lifecycle helpers ──────────────────────────────────────────────────
@@ -366,9 +391,14 @@ export async function getPhotosByPlant(
   const db = await getDB();
   const photos: Photo[] = await db.getAllFromIndex("photos", "plantId", plantId);
   const filtered = opts.includeCover ? photos : photos.filter((p) => !p.isCover);
-  return filtered.sort(
-    (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
-  );
+  return filtered.sort((a, b) => {
+    const tDiff = new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime();
+    if (tDiff !== 0) return tDiff;
+    // Same timestamp — newer insertion (larger id) wins. Without this,
+    // Growth Compare "Today" can latch onto the first-inserted same-day
+    // photo even after a fresher one is added.
+    return b.id.localeCompare(a.id);
+  });
 }
 
 export async function savePhoto(data: Omit<Photo, "id"> & { id?: string }): Promise<Photo> {
