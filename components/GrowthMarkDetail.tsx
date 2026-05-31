@@ -109,10 +109,12 @@ export default function GrowthMarkDetail({ mark, plant, onClose }: Props) {
       });
 
       const opts = {
-        pixelRatio: 2, // crisp on retina
-        // Background matches the card's archive-ivory so saved PNGs aren't
-        // weirdly transparent in the rounded corners of the card.
-        backgroundColor: "#EFE5CE",
+        // 3x captures crisp text + photos on 3x retina displays (iPhones
+        // since X). File size ~2-3 MB instead of ~1 MB — fine for sharing.
+        pixelRatio: 3,
+        // No backgroundColor — let the card's own rounded corners be
+        // transparent in the saved PNG, so it looks like an actual rounded
+        // card on any background it gets pasted onto.
         cacheBust: true,
       };
 

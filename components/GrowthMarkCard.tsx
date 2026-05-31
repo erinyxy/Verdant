@@ -72,7 +72,7 @@ export default function GrowthMarkCard({
     <Wrapper
       onClick={detailMode ? undefined : onOpen}
       className={[
-        "block w-full text-left rounded-2xl overflow-hidden relative",
+        "block w-full text-left rounded-3xl overflow-hidden relative",
         detailMode ? "" : "transition-transform active:scale-[0.995]",
       ].join(" ")}
       style={{
@@ -253,34 +253,36 @@ export default function GrowthMarkCard({
         })}
       </ul>
 
-      {/* Stats band + tagline */}
-      {hasStats && (
-        <>
-          <div
-            className="mx-6"
-            style={{ borderTop: "1px solid rgba(140,110,70,0.15)" }}
-          />
-          <footer className="px-6 pt-4 pb-6">
-            <ul
-              className="flex flex-wrap gap-x-4 gap-y-1.5 mb-5 text-xs"
-              style={{ color: "#7a7570" }}
-            >
-              {mark.stats.newLeaf > 0 && (
-                <li>🌿 {t("stats.newLeaf", { n: mark.stats.newLeaf })}</li>
-              )}
-              {mark.stats.blooming > 0 && (
-                <li>🌸 {t("stats.blooming", { n: mark.stats.blooming })}</li>
-              )}
-              {mark.stats.water > 0 && (
-                <li>💧 {t("stats.water", { n: mark.stats.water })}</li>
-              )}
-              {mark.stats.maintenance > 0 && (
-                <li>🪴 {t("stats.maintenance", { n: mark.stats.maintenance })}</li>
-              )}
-            </ul>
+      {/* Stats band + tagline + brand mark. Footer ALWAYS renders so the
+          brand watermark stays present on cards where every stat is zero. */}
+      <div
+        className="mx-6"
+        style={{ borderTop: "1px solid rgba(140,110,70,0.15)" }}
+      />
+      <footer className="px-6 pt-4 pb-6">
+        {hasStats && (
+          <ul
+            className="flex flex-wrap gap-x-4 gap-y-1.5 mb-5 text-xs"
+            style={{ color: "#7a7570" }}
+          >
+            {mark.stats.newLeaf > 0 && (
+              <li>🌿 {t("stats.newLeaf", { n: mark.stats.newLeaf })}</li>
+            )}
+            {mark.stats.blooming > 0 && (
+              <li>🌸 {t("stats.blooming", { n: mark.stats.blooming })}</li>
+            )}
+            {mark.stats.water > 0 && (
+              <li>💧 {t("stats.water", { n: mark.stats.water })}</li>
+            )}
+            {mark.stats.maintenance > 0 && (
+              <li>🪴 {t("stats.maintenance", { n: mark.stats.maintenance })}</li>
+            )}
+          </ul>
+        )}
 
-            {/* Sign-line: a short underline above the tagline, evoking
-                a handwritten signoff at the bottom of an archive card. */}
+        {/* Sign-line + tagline (left) + brand mark (right) */}
+        <div className="flex items-end justify-between gap-3">
+          <div className="flex-1 min-w-0">
             <div
               aria-hidden="true"
               style={{
@@ -302,9 +304,21 @@ export default function GrowthMarkCard({
             >
               {mark.kind === "farewell" ? t("farewell.tagline") : t("tagline")}
             </p>
-          </footer>
-        </>
-      )}
+          </div>
+
+          {/* Brand watermark — quiet "this is from Verdant" mark on the
+              saved/shared image. Same growth-mark glyph used in the Home
+              brand footer. */}
+          <img
+            src="/icons/growth-mark-transparent-256.png"
+            alt=""
+            width={24}
+            height={24}
+            aria-hidden="true"
+            style={{ opacity: 0.55, flexShrink: 0 }}
+          />
+        </div>
+      </footer>
     </Wrapper>
   );
 }
