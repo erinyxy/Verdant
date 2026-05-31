@@ -86,7 +86,8 @@ export default function GrowthMarkCard({
           : "0 1px 2px rgba(60,40,20,0.04), 0 4px 16px rgba(60,40,20,0.06)",
       }}
     >
-      {/* DAY {N} capsule — upper-right corner */}
+      {/* Top-right capsule. Milestone: "DAY 30". Farewell: "TOGETHER · 83 DAYS".
+          Hardcoded English uppercase, matches the archive-tag aesthetic. */}
       <div
         aria-hidden="true"
         className="absolute select-none flex items-center justify-center"
@@ -104,11 +105,12 @@ export default function GrowthMarkCard({
           letterSpacing: "0.12em",
           textTransform: "uppercase",
           lineHeight: 1,
+          whiteSpace: "nowrap",
         }}
       >
-        {/* English "DAY 30" form is universal — kept uppercase regardless of locale,
-            matches the archive-tag look the spec is aiming for. */}
-        DAY {mark.milestoneDays}
+        {mark.kind === "farewell"
+          ? `TOGETHER · ${mark.milestoneDays} DAYS`
+          : `DAY ${mark.milestoneDays}`}
       </div>
 
       {/* Header — plant name + caption (capsule sits absolute above) */}
@@ -128,7 +130,10 @@ export default function GrowthMarkCard({
           className={["text-sm leading-relaxed", taglineItalic ? "italic" : ""].join(" ")}
           style={{ color: "#7a7570" }}
         >
-          {tRoot(mark.captionKey)}
+          {/* Farewell caption interpolates {n}; milestone captions are static. */}
+          {mark.kind === "farewell"
+            ? tRoot("marks.farewell.caption", { n: mark.milestoneDays })
+            : tRoot(mark.captionKey)}
         </p>
       </header>
 
@@ -261,7 +266,7 @@ export default function GrowthMarkCard({
                 lineHeight: 1.6,
               }}
             >
-              {t("tagline")}
+              {mark.kind === "farewell" ? t("farewell.tagline") : t("tagline")}
             </p>
           </footer>
         </>

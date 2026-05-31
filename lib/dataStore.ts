@@ -92,7 +92,14 @@ export interface GrowthMarkEvent {
 export interface GrowthMark {
   id: string;
   plantId: string;
-  milestoneDays: MilestoneDays;
+  /** Discriminates between the day-based milestone cards (7/30/90/180/365)
+   *  and the farewell card auto-generated on Say goodbye.
+   *  Omitted means "milestone" (backwards-compatible with marks generated
+   *  before this field existed). */
+  kind?: "milestone" | "farewell";
+  /** For "milestone" kind: one of MilestoneDays (7/30/90/180/365).
+   *  For "farewell" kind: the total days the plant was cared for. */
+  milestoneDays: number;
   generatedAt: string;
   milestoneDate: string;
   events: GrowthMarkEvent[];
@@ -262,6 +269,7 @@ function reconcilePlantEndedAt(plantId: string): void {
     .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
   const newEndedAt = goodbyes[0]?.timestamp;
 
+  const wasPast = !!plants[idx].endedAt;
   if (plants[idx].endedAt !== newEndedAt) {
     plants[idx] = {
       ...plants[idx],
@@ -269,6 +277,14 @@ function reconcilePlantEndedAt(plantId: string): void {
       updatedAt: new Date().toISOString(),
     };
     savePlantsToLS(plants);
+
+    // Just got revived (endedAt cleared) — drop any farewell mark.
+    if (wasPast && !newEndedAt) {
+      const marks = loadMarks().filter(
+        (m) => !(m.plantId === plantId && (m.kind ?? "milestone") === "farewell")
+      );
+      saveMarksToLS(marks);
+    }
   }
 }
 
@@ -573,6 +589,7 @@ function buildMark(
   return {
     id: generateId(),
     plantId: plant.id,
+    kind: "milestone",
     milestoneDays: ms,
     generatedAt: new Date().toISOString(),
     milestoneDate: milestoneDate.toISOString(),
@@ -616,7 +633,13 @@ export async function syncMarks(): Promise<GrowthMark[]> {
 
     for (const ms of MILESTONES) {
       if (daysTogether < ms) continue;
-      if (existing.some((m) => m.plantId === plant.id && m.milestoneDays === ms)) continue;
+      // Only check against other "milestone" kind marks. Farewell marks have
+      // their own days count and live in a different slot.
+      if (existing.some((m) =>
+        m.plantId === plant.id &&
+        (m.kind ?? "milestone") === "milestone" &&
+        m.milestoneDays === ms
+      )) continue;
 
       const periodEndMs = startMs + ms * 86400000;
       const inPeriod = (ts: string) => {
@@ -662,6 +685,136 @@ export async function getDaysUntilFirstMilestone(): Promise<number | null> {
     }
   }
   return smallest;
+}
+
+// ─── Farewell mark (auto-generated on Say goodbye) ────────────────────────────
+
+/** Build a farewell GrowthMark capturing the full lifespan [startedOn → endedAt].
+ *  Mirrors buildMark's event-selection logic so the card layout stays consistent. */
+async function buildFarewellMark(plant: Plant): Promise<GrowthMark | null> {
+  if (!plant.endedAt) return null;
+
+  const records = await getRecordsByPlant(plant.id);
+  const photos = await getPhotosByPlant(plant.id);
+  const startDate = getPlantStartDate(plant, records);
+  const startMs = startDate.getTime();
+  const endMs = new Date(plant.endedAt).getTime();
+  const totalDays = Math.max(1, Math.floor((endMs - startMs) / 86400000));
+
+  const inPeriod = (ts: string) => {
+    const t = new Date(ts).getTime();
+    return t >= startMs && t <= endMs;
+  };
+  const periodPhotos = photos.filter((p) => inPeriod(p.timestamp));
+  if (periodPhotos.length === 0) return null; // no photos → skip, same rule as milestones
+
+  const periodRecords = records.filter((r) => inPeriod(r.timestamp));
+
+  const daysFromStart = (ts: string) =>
+    Math.floor((new Date(ts).getTime() - startMs) / 86400000);
+
+  const events: GrowthMarkEvent[] = [];
+
+  const first = periodPhotos[periodPhotos.length - 1];
+  events.push({
+    timestamp: first.timestamp,
+    daysFromStart: daysFromStart(first.timestamp),
+    photoId: first.id,
+    type: "firstPhoto",
+  });
+  const last = periodPhotos[0];
+  if (last.id !== first.id) {
+    events.push({
+      timestamp: last.timestamp,
+      daysFromStart: daysFromStart(last.timestamp),
+      photoId: last.id,
+      type: "lastPhoto",
+    });
+  }
+
+  const stateTypes: StateType[] = ["newLeaf", "blooming", "sick", "lookingBeautiful"];
+  for (const s of stateTypes) {
+    const earliest = [...periodRecords].reverse().find((r) => r.states.includes(s));
+    if (earliest) {
+      events.push({
+        timestamp: earliest.timestamp,
+        daysFromStart: daysFromStart(earliest.timestamp),
+        photoId: earliest.photoIds[0],
+        type: s,
+      });
+    }
+  }
+  const actionTypes = ["repot", "fertilize", "prune"] as const;
+  for (const a of actionTypes) {
+    const earliest = [...periodRecords].reverse().find((r) => r.actions.includes(a));
+    if (earliest) {
+      events.push({
+        timestamp: earliest.timestamp,
+        daysFromStart: daysFromStart(earliest.timestamp),
+        photoId: earliest.photoIds[0],
+        type: a,
+      });
+    }
+  }
+
+  // Merge same-day events + truncate to 8 + chronological order.
+  const byDay = new Map<number, GrowthMarkEvent[]>();
+  for (const e of events) {
+    const list = byDay.get(e.daysFromStart) ?? [];
+    list.push(e);
+    byDay.set(e.daysFromStart, list);
+  }
+  let merged: GrowthMarkEvent[] = [];
+  for (const list of byDay.values()) {
+    list.sort((a, b) => EVENT_PRIORITY[b.type] - EVENT_PRIORITY[a.type]);
+    merged.push(list[0]);
+  }
+  if (merged.length > 8) {
+    merged.sort((a, b) => EVENT_PRIORITY[b.type] - EVENT_PRIORITY[a.type]);
+    merged = merged.slice(0, 8);
+  }
+  merged.sort((a, b) => a.daysFromStart - b.daysFromStart);
+
+  const stats = {
+    water: periodRecords.filter((r) => r.actions.includes("water")).length,
+    newLeaf: periodRecords.filter((r) => r.states.includes("newLeaf")).length,
+    blooming: periodRecords.filter((r) => r.states.includes("blooming")).length,
+    maintenance: periodRecords.filter(
+      (r) =>
+        r.actions.includes("fertilize") ||
+        r.actions.includes("repot") ||
+        r.actions.includes("prune")
+    ).length,
+  };
+
+  return {
+    id: generateId(),
+    plantId: plant.id,
+    kind: "farewell",
+    milestoneDays: totalDays,
+    generatedAt: new Date().toISOString(),
+    milestoneDate: plant.endedAt,
+    events: merged,
+    stats,
+    captionKey: "marks.farewell.caption",
+  };
+}
+
+/** Idempotently create a farewell mark for a past plant.
+ *  Returns the existing mark if one is already on file. */
+export async function createFarewellMark(plantId: string): Promise<GrowthMark | null> {
+  const plant = await getPlantById(plantId);
+  if (!plant || !plant.endedAt) return null;
+
+  const existing = loadMarks().find(
+    (m) => m.plantId === plantId && (m.kind ?? "milestone") === "farewell"
+  );
+  if (existing) return existing;
+
+  const mark = await buildFarewellMark(plant);
+  if (!mark) return null;
+  saveMarksToLS([...loadMarks(), mark]);
+  return mark;
 }
 
 // ─── Seed / reset helpers ─────────────────────────────────────────────────────

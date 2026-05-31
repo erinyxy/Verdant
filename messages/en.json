@@ -146,6 +146,10 @@
       "180days": "180 days together 🌿",
       "365days": "365 days together 🌿"
     },
+    "farewell": {
+      "caption": "Thank you for our {n} days together",
+      "tagline": "Always in this garden 🌿"
+    },
     "event": {
       "firstPhoto": "The day we met",
       "lastPhoto": "How you look today",

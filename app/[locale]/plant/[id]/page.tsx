@@ -25,6 +25,7 @@ import {
   deleteRecord,
   updateRecord,
   saveRecord,
+  createFarewellMark,
   getPhotosByPlant,
   getPhotoNearDate,
   getTogetherDays,
@@ -686,6 +687,9 @@ export default function PlantDetailPage({
                           states: [],
                           photoIds: [],
                         });
+                        // Auto-generate a farewell Growth Mark — the full
+                        // journey deserves its own memento.
+                        await createFarewellMark(plant.id);
                         await Promise.all([reloadTimeline(), reloadPlant()]);
                       } finally {
                         setEndingPlant(false);
