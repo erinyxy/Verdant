@@ -127,7 +127,7 @@ export default function GrowthMarkCard({
             className="flex items-center gap-3 mb-5"
             aria-hidden="true"
           >
-            <div style={{ flex: 1, height: "0.5px", background: "#c9c3bb" }} />
+            <div style={{ flex: 1, height: 1, background: "#c9c3bb" }} />
             <span
               style={{
                 fontFamily: "var(--font-lora), Georgia, serif",
@@ -142,7 +142,7 @@ export default function GrowthMarkCard({
             >
               TOGETHER · {mark.milestoneDays} DAYS
             </span>
-            <div style={{ flex: 1, height: "0.5px", background: "#c9c3bb" }} />
+            <div style={{ flex: 1, height: 1, background: "#c9c3bb" }} />
           </div>
         )}
 
