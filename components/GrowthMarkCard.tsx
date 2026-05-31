@@ -86,35 +86,66 @@ export default function GrowthMarkCard({
           : "0 1px 2px rgba(60,40,20,0.04), 0 4px 16px rgba(60,40,20,0.06)",
       }}
     >
-      {/* Top-right capsule. Milestone: "DAY 30". Farewell: "TOGETHER · 83 DAYS".
-          Hardcoded English uppercase, matches the archive-tag aesthetic. */}
-      <div
-        aria-hidden="true"
-        className="absolute select-none flex items-center justify-center"
-        style={{
-          top: 20,
-          right: 20,
-          height: 26,
-          padding: "0 12px",
-          borderRadius: 999,
-          border: "1px solid rgba(122,154,119,0.35)",
-          background: "rgba(122,154,119,0.05)",
-          color: "#4A6B47",
-          fontSize: 11,
-          fontWeight: 600,
-          letterSpacing: "0.12em",
-          textTransform: "uppercase",
-          lineHeight: 1,
-          whiteSpace: "nowrap",
-        }}
-      >
-        {mark.kind === "farewell"
-          ? `TOGETHER · ${mark.milestoneDays} DAYS`
-          : `DAY ${mark.milestoneDays}`}
-      </div>
+      {/* Milestone: small "DAY 30" capsule, top-right. Farewell uses a
+          ceremonial hairline-flanked inscription inside the header instead. */}
+      {mark.kind !== "farewell" && (
+        <div
+          aria-hidden="true"
+          className="absolute select-none flex items-center justify-center"
+          style={{
+            top: 20,
+            right: 20,
+            height: 26,
+            padding: "0 12px",
+            borderRadius: 999,
+            border: "1px solid rgba(122,154,119,0.35)",
+            background: "rgba(122,154,119,0.05)",
+            color: "#4A6B47",
+            fontSize: 11,
+            fontWeight: 600,
+            letterSpacing: "0.12em",
+            textTransform: "uppercase",
+            lineHeight: 1,
+            whiteSpace: "nowrap",
+          }}
+        >
+          DAY {mark.milestoneDays}
+        </div>
+      )}
 
-      {/* Header — plant name + caption (capsule sits absolute above) */}
-      <header className="pl-6 pr-24 pt-6 pb-4">
+      {/* Header — for farewell, no right-padding needed (no top-right capsule);
+          a Lora-serif inscription line above the name sets the memorial tone. */}
+      <header
+        className={
+          mark.kind === "farewell"
+            ? "px-6 pt-6 pb-4"
+            : "pl-6 pr-24 pt-6 pb-4"
+        }
+      >
+        {mark.kind === "farewell" && (
+          <div
+            className="flex items-center gap-3 mb-5"
+            aria-hidden="true"
+          >
+            <div style={{ flex: 1, height: "0.5px", background: "#c9c3bb" }} />
+            <span
+              style={{
+                fontFamily: "var(--font-lora), Georgia, serif",
+                fontSize: 12,
+                fontWeight: 400,
+                letterSpacing: "0.28em",
+                color: "#4A6B47",
+                textTransform: "uppercase",
+                whiteSpace: "nowrap",
+                lineHeight: 1,
+              }}
+            >
+              TOGETHER · {mark.milestoneDays} DAYS
+            </span>
+            <div style={{ flex: 1, height: "0.5px", background: "#c9c3bb" }} />
+          </div>
+        )}
+
         <p
           className="text-2xl mb-2 leading-tight"
           style={{
@@ -128,7 +159,10 @@ export default function GrowthMarkCard({
         </p>
         <p
           className={["text-sm leading-relaxed", taglineItalic ? "italic" : ""].join(" ")}
-          style={{ color: "#7a7570" }}
+          style={{
+            color: "#7a7570",
+            whiteSpace: mark.kind === "farewell" ? "nowrap" : undefined,
+          }}
         >
           {/* Farewell caption interpolates {n}; milestone captions are static. */}
           {mark.kind === "farewell"
