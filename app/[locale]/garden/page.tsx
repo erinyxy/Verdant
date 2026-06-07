@@ -19,6 +19,7 @@ import PhotoFromStore from "@/components/PhotoFromStore";
 import SampleDataBanner from "@/components/SampleDataBanner";
 import FirstPlantEmptyState from "@/components/FirstPlantEmptyState";
 import DataMenu from "@/components/DataMenu";
+import CloudModeBadge from "@/components/CloudModeBadge";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -97,6 +98,7 @@ export default function GardenPage() {
           {t("title")}
         </h1>
         <div className="flex items-center gap-1.5 flex-shrink-0 mt-1">
+          <CloudModeBadge />
           <Link
             href={`/${locale}/newcomer`}
             className="text-xs px-3 py-1.5 rounded-full transition-opacity active:opacity-70"

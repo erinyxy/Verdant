@@ -12,11 +12,14 @@
  */
 
 import { useEffect, useRef, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
+import { useRouter } from "next/navigation";
 import { exportBackup, importBackup } from "@/lib/dataStore";
 
 export default function DataMenu() {
   const t = useTranslations("backup");
+  const locale = useLocale();
+  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [pendingImport, setPendingImport] = useState<unknown | null>(null);
   const [busy, setBusy] = useState(false);
@@ -144,6 +147,19 @@ export default function DataMenu() {
             style={{ color: "#3a3530" }}
           >
             {t("import")}
+          </button>
+          <div style={{ height: 1, background: "rgba(0,0,0,0.05)" }} />
+          <button
+            type="button"
+            role="menuitem"
+            onClick={() => {
+              setOpen(false);
+              router.push(`/${locale}/owner`);
+            }}
+            className="block w-full text-left px-4 py-2.5 text-sm transition-colors hover:bg-black/[0.03]"
+            style={{ color: "#3a3530" }}
+          >
+            Cloud Mode…
           </button>
         </div>
       )}

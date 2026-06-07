@@ -156,6 +156,7 @@ function loadPlants(): Plant[] {
 
 function savePlantsToLS(plants: Plant[]) {
   localStorage.setItem(LS_PLANTS_KEY, JSON.stringify(plants));
+  emitMutated();
 }
 
 function loadTimeline(): TimelineEntry[] {
@@ -169,10 +170,29 @@ function loadTimeline(): TimelineEntry[] {
 
 function saveTimelineToLS(entries: TimelineEntry[]) {
   localStorage.setItem(LS_TIMELINE_KEY, JSON.stringify(entries));
+  emitMutated();
 }
 
 function generateId(): string {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
+/** Notify listeners (currently lib/cloudSync) that local state changed.
+ *  Fired from the low-level write helpers below so business logic above
+ *  doesn't need to know about sync. */
+let _suppressEmit = 0;
+function emitMutated(): void {
+  if (typeof window === "undefined") return;
+  if (_suppressEmit > 0) return;
+  window.dispatchEvent(new CustomEvent("verdant:mutated"));
+}
+/** Wrap a write batch (e.g. cloud → local hydrate) so it doesn't bounce back
+ *  out as a push to the server. Re-entrant. */
+export function withSuppressedMutationEvents<T>(fn: () => Promise<T>): Promise<T> {
+  _suppressEmit++;
+  return fn().finally(() => {
+    _suppressEmit--;
+  });
 }
 
 // ─── Plant API ────────────────────────────────────────────────────────────────
@@ -425,12 +445,14 @@ export async function savePhoto(data: Omit<Photo, "id"> & { id?: string }): Prom
     timestamp: data.timestamp ?? new Date().toISOString(),
   };
   await db.put("photos", photo);
+  emitMutated();
   return photo;
 }
 
 export async function deletePhoto(id: string): Promise<void> {
   const db = await getDB();
   await db.delete("photos", id);
+  emitMutated();
 }
 
 /**
@@ -478,6 +500,7 @@ function loadMarks(): GrowthMark[] {
 
 function saveMarksToLS(marks: GrowthMark[]) {
   localStorage.setItem(LS_MARKS_KEY, JSON.stringify(marks));
+  emitMutated();
 }
 
 // Priority for startDate: plant.startedOn → earliest timeline entry → plant.createdAt
