@@ -96,12 +96,15 @@ async function fetchPhoto(id) {
 }
 
 function slug(s) {
+  // Keep CJK / kana intact — filesystem and URL paths handle them fine.
+  // Only strip whitespace and characters that would break a path.
   return (
     s
       .toLowerCase()
-      .normalize("NFKD")
-      .replace(/[̀-ͯ]/g, "")
-      .replace(/[^a-z0-9]+/g, "-")
+      .trim()
+      .replace(/\s+/g, "-")
+      .replace(/[/\\?#&%"'<>:|*]+/g, "")
+      .replace(/-+/g, "-")
       .replace(/^-+|-+$/g, "")
       .slice(0, 24) || "plant"
   );

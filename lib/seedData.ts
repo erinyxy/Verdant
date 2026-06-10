@@ -44,253 +44,393 @@ interface PlantSeed {
 
 const PLANTS: PlantSeed[] = [
   {
-    key: "rubber",
-    name: "ゴムノキ",
-    startedOn: "2025-11-18",
-    records: [
+    "key": "ゴムノキ",
+    "name": "ゴムノキ",
+    "startedOn": "2025-11-18",
+    "coverPhoto": "/demo-photos/ゴムノキ-cover.jpg",
+    "records": [
       {
-        date: "2025-11-23",
-        actions: ["water"],
-        states: ["lookingBeautiful"],
-        photo: "/demo-photos/rubber-r0-2025-11-23.jpg",
+        "date": "2025-11-23",
+        "actions": [
+          "water"
+        ],
+        "states": [
+          "lookingBeautiful"
+        ],
+        "photo": "/demo-photos/ゴムノキ-r0-2025-11-23.jpg"
       },
       {
-        date: "2025-11-27",
-        actions: [],
-        states: ["newLeaf"],
-        photo: "/demo-photos/rubber-r1-2025-11-27.jpg",
+        "date": "2025-11-27",
+        "actions": [],
+        "states": [
+          "newLeaf"
+        ],
+        "photo": "/demo-photos/ゴムノキ-r1-2025-11-27.jpg"
       },
       {
-        date: "2025-12-01",
-        actions: ["repot"],
-        states: [],
+        "date": "2025-12-01",
+        "actions": [
+          "repot"
+        ],
+        "states": []
       },
       {
-        date: "2025-12-30",
-        actions: [],
-        states: ["newLeaf"],
-        photo: "/demo-photos/rubber-r3-2025-12-30.jpg",
+        "date": "2025-12-30",
+        "actions": [],
+        "states": [
+          "newLeaf"
+        ],
+        "photo": "/demo-photos/ゴムノキ-r3-2025-12-30.jpg"
       },
       {
-        date: "2026-03-30",
-        actions: [],
-        states: ["newLeaf"],
-        photo: "/demo-photos/rubber-r4-2026-03-30.jpg",
+        "date": "2026-03-30",
+        "actions": [],
+        "states": [
+          "newLeaf"
+        ],
+        "photo": "/demo-photos/ゴムノキ-r4-2026-03-30.jpg"
       },
       {
-        date: "2026-04-18",
-        actions: ["fertilize"],
-        states: [],
+        "date": "2026-04-18",
+        "actions": [
+          "fertilize"
+        ],
+        "states": []
       },
       {
-        date: "2026-04-23",
-        actions: [],
-        states: ["newLeaf"],
-        photo: "/demo-photos/rubber-r6-2026-04-23.jpg",
+        "date": "2026-04-23",
+        "actions": [],
+        "states": [
+          "newLeaf"
+        ],
+        "photo": "/demo-photos/ゴムノキ-r6-2026-04-23.jpg"
       },
       {
-        date: "2026-04-26",
-        actions: [],
-        states: ["sick"],
-        photo: "/demo-photos/rubber-r7-2026-04-26.jpg",
+        "date": "2026-04-26",
+        "actions": [],
+        "states": [
+          "sick"
+        ],
+        "photo": "/demo-photos/ゴムノキ-r7-2026-04-26.jpg"
       },
       {
-        date: "2026-05-13",
-        actions: [],
-        states: ["newLeaf"],
+        "date": "2026-05-13",
+        "actions": [],
+        "states": [
+          "newLeaf"
+        ]
       },
       {
-        date: "2026-05-15",
-        actions: ["fertilize"],
-        states: [],
+        "date": "2026-05-15",
+        "actions": [
+          "fertilize"
+        ],
+        "states": []
       },
       {
-        date: "2026-05-17",
-        actions: ["water"],
-        states: ["lookingBeautiful"],
-        note: "40cmになった",
-        photo: "/demo-photos/rubber-r10-2026-05-17.jpg",
-      },
-    ],
+        "date": "2026-05-17",
+        "actions": [
+          "water"
+        ],
+        "states": [
+          "lookingBeautiful"
+        ],
+        "note": "40cmになった",
+        "photo": "/demo-photos/ゴムノキ-r10-2026-05-17.jpg"
+      }
+    ]
   },
   {
-    key: "tulip",
-    name: "チューリップ",
-    startedOn: "2025-12-01",
-    dayOnePhoto: "/demo-photos/tulip-day1.jpg",
-    coverPhoto: "/demo-photos/tulip-cover.jpg",
-    records: [
+    "key": "チューリップ",
+    "name": "チューリップ",
+    "startedOn": "2025-12-01",
+    "dayOnePhoto": "/demo-photos/チューリップ-day1.jpg",
+    "coverPhoto": "/demo-photos/チューリップ-cover.jpg",
+    "records": [
       {
-        date: "2026-01-15",
-        actions: [],
-        states: ["newLeaf"],
-        note: "芽が出た",
-        photo: "/demo-photos/tulip-r0-2026-01-15.jpg",
+        "date": "2026-01-15",
+        "actions": [],
+        "states": [
+          "newLeaf"
+        ],
+        "note": "芽が出た",
+        "photo": "/demo-photos/チューリップ-r0-2026-01-15.jpg"
       },
       {
-        date: "2026-02-28",
-        actions: ["repot", "water"],
-        states: [],
-        photo: "/demo-photos/tulip-r1-2026-02-28.jpg",
+        "date": "2026-02-28",
+        "actions": [
+          "repot",
+          "water"
+        ],
+        "states": [],
+        "photo": "/demo-photos/チューリップ-r1-2026-02-28.jpg"
       },
       {
-        date: "2026-04-04",
-        actions: ["fertilize"],
-        states: [],
-        photo: "/demo-photos/tulip-r2-2026-04-04.jpg",
+        "date": "2026-04-04",
+        "actions": [
+          "fertilize"
+        ],
+        "states": [],
+        "photo": "/demo-photos/チューリップ-r2-2026-04-04.jpg"
       },
       {
-        date: "2026-04-07",
-        actions: ["water"],
-        states: ["blooming", "lookingBeautiful"],
-        photo: "/demo-photos/tulip-r3-2026-04-07.jpg",
+        "date": "2026-04-07",
+        "actions": [
+          "water"
+        ],
+        "states": [
+          "blooming",
+          "lookingBeautiful"
+        ],
+        "photo": "/demo-photos/チューリップ-r3-2026-04-07.jpg"
       },
       {
-        date: "2026-04-14",
-        actions: [],
-        states: ["lookingBeautiful"],
-        photo: "/demo-photos/tulip-r4-2026-04-14.jpg",
+        "date": "2026-04-14",
+        "actions": [],
+        "states": [
+          "lookingBeautiful"
+        ],
+        "photo": "/demo-photos/チューリップ-r4-2026-04-14.jpg"
       },
       {
-        date: "2026-04-20",
-        actions: [],
-        states: [],
-        note: "花が散った",
-        photo: "/demo-photos/tulip-r5-2026-04-20.jpg",
+        "date": "2026-04-20",
+        "actions": [],
+        "states": [],
+        "note": "花が散った",
+        "photo": "/demo-photos/チューリップ-r5-2026-04-20.jpg"
       },
       {
-        date: "2026-05-03",
-        actions: ["sayGoodbye"],
-        states: [],
-        note: "ありがとう！さよなら💚",
-        photo: "/demo-photos/tulip-r6-2026-05-03.jpg",
-      },
-    ],
+        "date": "2026-05-03",
+        "actions": [
+          "sayGoodbye"
+        ],
+        "states": [],
+        "note": "ありがとう！さよなら💚",
+        "photo": "/demo-photos/チューリップ-r6-2026-05-03.jpg"
+      }
+    ]
   },
   {
-    key: "daisy",
-    name: "オステオスペルマム",
-    startedOn: "2026-02-15",
-    // day-1 photo == the avatar image here (user submitted one photo); no
-    // separate cover, so dayOnePhoto doubles as the avatar.
-    dayOnePhoto: "/demo-photos/daisy-cover.jpg",
-    records: [
+    "key": "オステオスペルマム",
+    "name": "オステオスペルマム",
+    "startedOn": "2026-02-15",
+    "dayOnePhoto": "/demo-photos/オステオスペルマム-day1.jpg",
+    "coverPhoto": "/demo-photos/オステオスペルマム-cover.jpg",
+    "records": [
       {
-        date: "2026-02-15",
-        actions: [],
-        states: ["lookingBeautiful"],
-        note: "Happy new year🥳",
-        photo: "/demo-photos/daisy-r0-2026-02-15.jpg",
+        "date": "2026-02-15",
+        "actions": [],
+        "states": [
+          "lookingBeautiful"
+        ],
+        "note": "Happy new year🥳",
+        "photo": "/demo-photos/オステオスペルマム-r0-2026-02-15.jpg"
       },
       {
-        date: "2026-03-27",
-        actions: [],
-        states: ["sick"],
-        note: "土替わり",
-        photo: "/demo-photos/daisy-r1-2026-03-27.jpg",
+        "date": "2026-03-27",
+        "actions": [],
+        "states": [
+          "sick"
+        ],
+        "note": "土替わり",
+        "photo": "/demo-photos/オステオスペルマム-r1-2026-03-27.jpg"
       },
       {
-        date: "2026-04-16",
-        actions: ["water"],
-        states: ["blooming"],
-        photo: "/demo-photos/daisy-r2-2026-04-16.jpg",
+        "date": "2026-04-16",
+        "actions": [
+          "water"
+        ],
+        "states": [
+          "blooming"
+        ],
+        "photo": "/demo-photos/オステオスペルマム-r2-2026-04-16.jpg"
       },
       {
-        date: "2026-04-22",
-        actions: ["repot"],
-        states: [],
+        "date": "2026-04-22",
+        "actions": [
+          "repot"
+        ],
+        "states": []
       },
       {
-        date: "2026-05-06",
-        actions: [],
-        states: ["sick"],
-        note: "日差しでぐったりしちゃった",
-        photo: "/demo-photos/daisy-r4-2026-05-06.jpg",
+        "date": "2026-05-06",
+        "actions": [],
+        "states": [
+          "sick"
+        ],
+        "note": "日差しでぐったりしちゃった",
+        "photo": "/demo-photos/オステオスペルマム-r4-2026-05-06.jpg"
       },
       {
-        date: "2026-05-13",
-        actions: ["fertilize"],
-        states: [],
-      },
-    ],
+        "date": "2026-05-13",
+        "actions": [
+          "fertilize"
+        ],
+        "states": []
+      }
+    ]
   },
   {
-    key: "pansyViola",
-    name: "パンジー・ビオラ",
-    startedOn: "2025-10-19",
-    dayOnePhoto: "/demo-photos/pansy-day1.jpg",
-    coverPhoto: "/demo-photos/pansy-cover.jpg",
-    records: [
+    "key": "パンジー・ビオラ",
+    "name": "パンジー・ビオラ",
+    "startedOn": "2025-10-19",
+    "dayOnePhoto": "/demo-photos/パンジー・ビオラ-day1.jpg",
+    "coverPhoto": "/demo-photos/パンジー・ビオラ-cover.jpg",
+    "records": [
       {
-        date: "2025-10-26",
-        actions: [],
-        states: ["newLeaf"],
-        note: "芽が出た",
-        photo: "/demo-photos/pansy-r0-2025-10-26.jpg",
+        "date": "2025-10-26",
+        "actions": [],
+        "states": [
+          "newLeaf"
+        ],
+        "note": "芽が出た",
+        "photo": "/demo-photos/パンジー・ビオラ-r0-2025-10-26.jpg"
       },
       {
-        date: "2026-02-17",
-        actions: ["water"],
-        states: ["blooming"],
-        photo: "/demo-photos/pansy-r1-2026-02-17.jpg",
+        "date": "2026-02-17",
+        "actions": [
+          "water"
+        ],
+        "states": [
+          "blooming"
+        ],
+        "photo": "/demo-photos/パンジー・ビオラ-r1-2026-02-17.jpg"
       },
       {
-        date: "2026-02-28",
-        actions: ["repot"],
-        states: [],
-        photo: "/demo-photos/pansy-r2-2026-02-28.jpg",
+        "date": "2026-02-28",
+        "actions": [
+          "repot"
+        ],
+        "states": [],
+        "photo": "/demo-photos/パンジー・ビオラ-r2-2026-02-28.jpg"
       },
       {
-        date: "2026-04-11",
-        actions: ["fertilize"],
-        states: [],
-        photo: "/demo-photos/pansy-r3-2026-04-11.jpg",
+        "date": "2026-04-11",
+        "actions": [
+          "fertilize"
+        ],
+        "states": [],
+        "photo": "/demo-photos/パンジー・ビオラ-r3-2026-04-11.jpg"
       },
       {
-        date: "2026-05-18",
-        actions: ["water"],
-        states: ["blooming"],
-        photo: "/demo-photos/pansy-r4-2026-05-18.jpg",
+        "date": "2026-05-04",
+        "actions": [],
+        "states": [
+          "lookingBeautiful",
+          "blooming"
+        ],
+        "photo": "/demo-photos/パンジー・ビオラ-r4-2026-05-04.jpg"
       },
-    ],
+      {
+        "date": "2026-05-18",
+        "actions": [
+          "water"
+        ],
+        "states": [
+          "blooming"
+        ],
+        "photo": "/demo-photos/パンジー・ビオラ-r5-2026-05-18.jpg"
+      },
+      {
+        "date": "2026-05-21",
+        "actions": [
+          "sow",
+          "water"
+        ],
+        "states": [
+          "lookingBeautiful",
+          "blooming"
+        ],
+        "photo": "/demo-photos/パンジー・ビオラ-r6-2026-05-21.jpg"
+      },
+      {
+        "date": "2026-05-25",
+        "actions": [
+          "water"
+        ],
+        "states": [
+          "lookingBeautiful",
+          "blooming"
+        ],
+        "photo": "/demo-photos/パンジー・ビオラ-r7-2026-05-25.jpg"
+      },
+      {
+        "date": "2026-05-31",
+        "actions": [],
+        "states": [
+          "lookingBeautiful"
+        ],
+        "note": "bye bye💚😭",
+        "photo": "/demo-photos/パンジー・ビオラ-r8-2026-05-31.jpg"
+      },
+      {
+        "date": "2026-06-10",
+        "actions": [],
+        "states": [
+          "sick"
+        ],
+        "note": "アブラムシ"
+      },
+      {
+        "date": "2026-06-10",
+        "actions": [
+          "prune"
+        ],
+        "states": [
+          "sick"
+        ],
+        "photo": "/demo-photos/パンジー・ビオラ-r10-2026-06-10.jpg"
+      }
+    ]
   },
   {
-    key: "basil",
-    name: "Basil",
-    startedOn: "2026-04-24",
-    records: [
+    "key": "basil",
+    "name": "Basil",
+    "startedOn": "2026-04-24",
+    "coverPhoto": "/demo-photos/basil-cover.jpg",
+    "records": [
       {
-        date: "2026-04-24",
-        actions: ["sow"],
-        states: [],
-        note: "水栽培",
-        photo: "/demo-photos/basil-r0-2026-04-24.jpg",
+        "date": "2026-04-24",
+        "actions": [
+          "sow"
+        ],
+        "states": [],
+        "note": "水栽培",
+        "photo": "/demo-photos/basil-r0-2026-04-24.jpg"
       },
       {
-        date: "2026-04-30",
-        actions: [],
-        states: ["lookingBeautiful"],
-        note: "細根が出た",
+        "date": "2026-04-30",
+        "actions": [],
+        "states": [
+          "lookingBeautiful"
+        ],
+        "note": "細根が出た"
       },
       {
-        date: "2026-05-06",
-        actions: ["repot"],
-        states: [],
-        note: "土に入れた",
+        "date": "2026-05-06",
+        "actions": [
+          "repot"
+        ],
+        "states": [],
+        "note": "土に入れた"
       },
       {
-        date: "2026-05-16",
-        actions: ["water"],
-        states: [],
+        "date": "2026-05-16",
+        "actions": [
+          "water"
+        ],
+        "states": []
       },
       {
-        date: "2026-05-18",
-        actions: [],
-        states: ["lookingBeautiful"],
-        photo: "/demo-photos/basil-r4-2026-05-18.jpg",
-      },
-    ],
-  },
+        "date": "2026-05-18",
+        "actions": [],
+        "states": [
+          "lookingBeautiful"
+        ],
+        "photo": "/demo-photos/basil-r4-2026-05-18.jpg"
+      }
+    ]
+  }
 ];
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
