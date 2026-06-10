@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "sync-demo": "node scripts/sync-demo-from-server.mjs"
   },
   "dependencies": {
     "browser-image-compression": "^2.0.2",
