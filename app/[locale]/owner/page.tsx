@@ -27,6 +27,8 @@ import {
   detectMode,
 } from "@/lib/storeMode";
 import { pullFromServer, pushAllToServer, flushSync } from "@/lib/cloudSync";
+import { clearAllData, withSuppressedMutationEvents } from "@/lib/dataStore";
+import { seedIfEmpty } from "@/lib/seedData";
 
 type Status =
   | { kind: "idle" }
@@ -96,18 +98,40 @@ export default function OwnerPage() {
         return;
       }
       enableCloudMode();
+      // Deliberately DO NOT pull or push here — that's the user's explicit
+      // choice (the two buttons below). A blind pull on a fresh server
+      // would silently wipe local data; a blind push would silently
+      // clobber a previously-populated server. Let the human decide.
+      setMode("cloud");
       setStatus({
         kind: "ok",
-        msg: "Cloud Mode enabled. Pulling server snapshot…",
+        msg:
+          "Cloud Mode enabled. Now choose: 'Pull from cloud' to load " +
+          "server data into this device, or 'Push local → cloud' to " +
+          "upload this device's data to the server.",
       });
-      await pullFromServer();
-      setStatus({ kind: "ok", msg: "Cloud Mode active. Server data loaded." });
-      setMode("cloud");
     } catch (err) {
       setStatus({
         kind: "error",
         msg: `Failed: ${(err as Error).message}`,
       });
+    }
+  }
+
+  async function pullNow() {
+    if (
+      !confirm(
+        "This OVERWRITES local data with the server snapshot. Continue?"
+      )
+    )
+      return;
+    setStatus({ kind: "busy", msg: "Pulling from server…" });
+    try {
+      await pullFromServer();
+      setStatus({ kind: "ok", msg: "Local data replaced with server data." });
+      window.dispatchEvent(new Event("verdant:seeded")); // refresh all hooks
+    } catch (err) {
+      setStatus({ kind: "error", msg: (err as Error).message });
     }
   }
 
@@ -146,6 +170,36 @@ export default function OwnerPage() {
     clearOwnerCredentials();
     setMode("local");
     setStatus({ kind: "ok", msg: "Cloud Mode disabled." });
+  }
+
+  async function reseedDemo() {
+    if (
+      !confirm(
+        "This WIPES this device's local data and replaces it with the demo " +
+          "seed (what anonymous visitors see). Cloud server data is NOT touched. " +
+          "Continue?"
+      )
+    )
+      return;
+    setStatus({ kind: "busy", msg: "Reseeding with demo data…" });
+    try {
+      // Suppress cloud-sync push: this is a local reset, not a server update.
+      // If the owner wants the server overwritten too, use 'Push local → cloud'
+      // afterwards explicitly.
+      await withSuppressedMutationEvents(async () => {
+        await clearAllData();
+        // clearAllData leaves flags alone; seedIfEmpty bails if either of these
+        // is set, so clear them explicitly.
+        localStorage.removeItem("verdant:cleared");
+        localStorage.removeItem("verdant:sampleData");
+        localStorage.removeItem("verdant:sampleBannerDismissed");
+        await seedIfEmpty();
+      });
+      window.dispatchEvent(new Event("verdant:seeded")); // refresh all hooks
+      setStatus({ kind: "ok", msg: "Demo data loaded. Open Garden to verify." });
+    } catch (err) {
+      setStatus({ kind: "error", msg: (err as Error).message });
+    }
   }
 
   async function recheck() {
@@ -222,6 +276,14 @@ export default function OwnerPage() {
           Push local → cloud
         </button>
         <button
+          onClick={pullNow}
+          disabled={!isCloudMode()}
+          className="rounded border border-stone-300 px-3 py-1.5 text-xs disabled:opacity-40"
+        >
+          Pull cloud → local
+        </button>
+
+        <button
           onClick={syncNow}
           disabled={!isCloudMode()}
           className="rounded border border-stone-300 px-3 py-1.5 text-xs disabled:opacity-40"
@@ -240,6 +302,13 @@ export default function OwnerPage() {
           className="rounded border border-rose-300 px-3 py-1.5 text-xs text-rose-700"
         >
           Disable Cloud
+        </button>
+
+        <button
+          onClick={reseedDemo}
+          className="col-span-2 rounded border border-stone-300 px-3 py-1.5 text-xs"
+        >
+          Reseed with demo data (local only)
         </button>
       </div>
 
