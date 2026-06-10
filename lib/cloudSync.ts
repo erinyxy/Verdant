@@ -63,22 +63,63 @@ export async function pullFromServer(): Promise<void> {
   const token = getToken();
   if (!base || !token) throw new Error("Cloud Mode credentials missing");
 
-  const [plants, records, marks, photoMetas] = await Promise.all([
-    apiJson<unknown[]>("GET", "/plants"),
+  type PlantLite = { id: string; coverPhotoId?: string; createdAt: string };
+  type PhotoMeta = Record<string, unknown> & { id: string; dataUrl: string };
+
+  const [plants, records, marks] = await Promise.all([
+    apiJson<PlantLite[]>("GET", "/plants"),
     apiJson<unknown[]>("GET", "/records"),
     apiJson<unknown[]>("GET", "/marks"),
-    apiJson<unknown[]>("GET", "/photos"),
   ]);
 
-  // Photos endpoint returns metadata with dataUrl = signed URL. We must fetch
-  // each image and re-encode as base64 so the local IndexedDB store stays the
-  // single source of truth (frontend renders <img src={dataUrl}>).
-  const photos = await Promise.all(
-    (photoMetas as Array<Record<string, unknown>>).map(async (p) => {
-      const dataUrl = await fetchAsDataUrl(String(p.dataUrl));
-      return { ...p, dataUrl };
-    })
+  // Backend requires plantId on GET /photos (no global listing). Iterate
+  // per plant in parallel and flatten. This list excludes isCover photos
+  // by design (covers are fetched by id below).
+  const photoLists = await Promise.all(
+    plants.map((p) =>
+      apiJson<PhotoMeta[]>("GET", `/photos?plantId=${encodeURIComponent(p.id)}`)
+    )
   );
+  const photoMetas = photoLists.flat();
+
+  // Decode each signed/authed photo URL to base64 so the local IndexedDB
+  // store keeps holding self-contained data URLs (architecture rule §2:
+  // <img src={dataUrl}>).
+  const photos = await Promise.all(
+    photoMetas.map(async (p) => ({
+      ...p,
+      dataUrl: await fetchAsDataUrl(p.dataUrl),
+    }))
+  );
+
+  // Cover photos: not returned by /photos?plantId. Fetch by id from
+  // /photos/:id (which serves image bytes, not metadata) and synthesize
+  // the metadata locally. Timestamp falls back to plant.createdAt — the
+  // server has no other anchor for cover-only photos.
+  const seen = new Set(photos.map((p) => p.id));
+  const covers = (
+    await Promise.all(
+      plants.map(async (p) => {
+        if (!p.coverPhotoId || seen.has(p.coverPhotoId)) return null;
+        try {
+          const dataUrl = await fetchAsDataUrl(
+            `${base}/photos/${encodeURIComponent(p.coverPhotoId)}`
+          );
+          return {
+            id: p.coverPhotoId,
+            plantId: p.id,
+            timestamp: p.createdAt,
+            isCover: true,
+            dataUrl,
+          };
+        } catch {
+          // Cover may be missing on server (e.g. coverPhotoId points at a
+          // since-deleted photo). Skip; the frontend handles missing covers.
+          return null;
+        }
+      })
+    )
+  ).filter((x): x is NonNullable<typeof x> => x !== null);
 
   const backup: BackupFile = {
     app: "verdant",
@@ -87,7 +128,7 @@ export async function pullFromServer(): Promise<void> {
     plants: plants as BackupFile["plants"],
     timeline: records as BackupFile["timeline"],
     marks: marks as BackupFile["marks"],
-    photos: photos as BackupFile["photos"],
+    photos: [...photos, ...covers] as BackupFile["photos"],
   };
 
   // Suppress mutation events so the pull doesn't immediately schedule a push.
