@@ -355,16 +355,7 @@ const PLANTS: PlantSeed[] = [
         "photo": "/demo-photos/パンジー・ビオラ-r7-2026-05-25.jpg"
       },
       {
-        "date": "2026-05-31",
-        "actions": [],
-        "states": [
-          "lookingBeautiful"
-        ],
-        "note": "bye bye💚😭",
-        "photo": "/demo-photos/パンジー・ビオラ-r8-2026-05-31.jpg"
-      },
-      {
-        "date": "2026-06-10",
+        "date": "2026-05-26",
         "actions": [],
         "states": [
           "sick"
@@ -372,14 +363,37 @@ const PLANTS: PlantSeed[] = [
         "note": "アブラムシ"
       },
       {
-        "date": "2026-06-10",
+        "date": "2026-05-28",
         "actions": [
           "prune"
         ],
         "states": [
           "sick"
         ],
-        "photo": "/demo-photos/パンジー・ビオラ-r10-2026-06-10.jpg"
+        "photo": "/demo-photos/パンジー・ビオラ-r9-2026-05-28.jpg"
+      },
+      {
+        "date": "2026-05-31",
+        "actions": [],
+        "states": [
+          "lookingBeautiful"
+        ],
+        "note": "bye bye💚😭",
+        "photo": "/demo-photos/パンジー・ビオラ-r10-2026-05-31.jpg"
+      },
+      {
+        "date": "2026-05-31",
+        "actions": [],
+        "states": [],
+        "note": "see you💚💚💚",
+        "photo": "/demo-photos/パンジー・ビオラ-r11-2026-05-31.jpg"
+      },
+      {
+        "date": "2026-05-31",
+        "actions": [
+          "sayGoodbye"
+        ],
+        "states": []
       }
     ]
   },
@@ -428,6 +442,17 @@ const PLANTS: PlantSeed[] = [
           "lookingBeautiful"
         ],
         "photo": "/demo-photos/basil-r4-2026-05-18.jpg"
+      },
+      {
+        "date": "2026-06-10",
+        "actions": [
+          "water"
+        ],
+        "states": [
+          "newLeaf",
+          "lookingBeautiful"
+        ],
+        "photo": "/demo-photos/basil-r5-2026-06-10.jpg"
       }
     ]
   }
