@@ -113,6 +113,8 @@
     "plantActionsLabel": "植物操作",
     "sayGoodbye": "告别…",
     "sayGoodbyeConfirm": "和 {name} 告别？所有照片和记录都会保留下来。如果想恢复，把这条告别记录删掉就行。",
+    "deletePlant": "删除植物…",
+    "deletePlantConfirm": "永久删除 {name}？所有记录和照片都会一并清除，无法恢复。",
     "daysTogether": "一起走过 {n} 天",
     "save": "保存",
     "cancel": "取消"

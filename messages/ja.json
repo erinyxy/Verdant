@@ -113,6 +113,8 @@
     "plantActionsLabel": "植物の操作",
     "sayGoodbye": "お別れする…",
     "sayGoodbyeConfirm": "{name} とお別れしますか？写真と記録はそのまま残ります。お別れの記録を削除すれば元に戻せます。",
+    "deletePlant": "植物を削除…",
+    "deletePlantConfirm": "{name} を完全に削除しますか？すべての記録と写真も一緒に消えます。元に戻せません。",
     "daysTogether": "一緒に過ごした {n} 日",
     "save": "保存",
     "cancel": "キャンセル"

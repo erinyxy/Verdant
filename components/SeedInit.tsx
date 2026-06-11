@@ -3,9 +3,7 @@
 import { useEffect } from "react";
 import { seedIfEmpty } from "@/lib/seedData";
 import { detectMode } from "@/lib/storeMode";
-// Importing cloudSync for its side effect: registers the "verdant:mutated"
-// listener so writes in Cloud Mode auto-push to the server.
-import "@/lib/cloudSync";
+import { installSyncListener, flushSync } from "@/lib/cloudSync";
 
 /**
  * Client-side guard that seeds mock data on first mount, and — for the owner
@@ -21,17 +19,22 @@ export default function SeedInit() {
       navigator.storage.persist().catch(() => {});
     }
 
+    // Register Cloud Mode sync hooks early (idempotent). Explicit call
+    // beats relying on module side-effects, which production bundlers
+    // sometimes drop.
+    installSyncListener();
+
     (async () => {
       // 1. Decide mode. detectMode pings /health if the owner opted in;
       //    falls back to "local" silently for anonymous visitors.
       const mode = await detectMode();
 
       if (mode === "cloud") {
-        // 2a. Owner in Cloud Mode: do NOT auto-pull. Local stays the
-        //     working copy; mutations push to the server in the background
-        //     (lib/cloudSync). Auto-pulling here would clobber any offline
-        //     writes that hadn't synced yet. The owner can manually pull
-        //     from /owner when they actually want server → local.
+        // 2a. Owner in Cloud Mode: do NOT auto-pull (would clobber unsynced
+        //     local edits). Instead, push any pending state up — this is
+        //     the safety net for "previous session got killed mid-debounce
+        //     before the auto-push fired."
+        void flushSync();
         // Skip seedIfEmpty in Cloud Mode: never seed demo plants over the
         // owner's real data.
       } else {

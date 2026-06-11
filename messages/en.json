@@ -113,6 +113,8 @@
     "plantActionsLabel": "Plant actions",
     "sayGoodbye": "Say goodbye…",
     "sayGoodbyeConfirm": "Mark {name} as gone? Their memories and records will still be here. You can revive them later by deleting the goodbye entry.",
+    "deletePlant": "Delete plant…",
+    "deletePlantConfirm": "Delete {name} permanently? This removes all records and photos. This cannot be undone.",
     "daysTogether": "{n} days together",
     "save": "Save",
     "cancel": "Cancel"

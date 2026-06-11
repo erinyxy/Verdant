@@ -29,6 +29,7 @@ import {
   getPhotosByPlant,
   getPhotoNearDate,
   getTogetherDays,
+  deletePlant,
 } from "@/lib/dataStore";
 
 // ─── Types & helpers ──────────────────────────────────────────────────────────
@@ -619,9 +620,10 @@ export default function PlantDetailPage({
       )}
 
       <div className="px-5 pt-5">
-        {/* Plant name + 3-dot menu (active plants only).
-            Past plants are read-only and have no actions; the only way to
-            revive them is to delete the sayGoodbye timeline entry. */}
+        {/* Plant name + 3-dot menu.
+            For active plants the menu offers Say goodbye + Delete.
+            For past plants only Delete is meaningful (revive happens by
+            removing the sayGoodbye entry from the timeline). */}
         <div className="flex items-start justify-between gap-3 mb-0.5">
           <h1
             className="text-2xl flex-1 min-w-0"
@@ -639,7 +641,7 @@ export default function PlantDetailPage({
             )}
           </h1>
 
-          {!plant.endedAt && (
+          {(
             <div ref={plantMenuRef} className="relative flex-shrink-0 -mr-1 mt-1">
               <button
                 type="button"
@@ -669,36 +671,56 @@ export default function PlantDetailPage({
                     minWidth: 160,
                   }}
                 >
+                  {!plant.endedAt && (
+                    <button
+                      type="button"
+                      role="menuitem"
+                      onClick={async () => {
+                        setPlantMenuOpen(false);
+                        const msg = t("sayGoodbyeConfirm", { name: plant.nickname || plant.name });
+                        if (!window.confirm(msg)) return;
+                        setEndingPlant(true);
+                        try {
+                          // Today's date at local noon (matches dateStrToTimestamp).
+                          const today = todayStr();
+                          await saveRecord({
+                            plantId: plant.id,
+                            timestamp: dateStrToTimestamp(today),
+                            actions: ["sayGoodbye"],
+                            states: [],
+                            photoIds: [],
+                          });
+                          // Auto-generate a farewell Growth Mark — the full
+                          // journey deserves its own memento.
+                          await createFarewellMark(plant.id);
+                          await Promise.all([reloadTimeline(), reloadPlant()]);
+                        } finally {
+                          setEndingPlant(false);
+                        }
+                      }}
+                      className="block w-full text-left px-3 py-2 text-xs transition-colors hover:bg-black/[0.03]"
+                      style={{ color: "#3a3530" }}
+                    >
+                      🍂 {t("sayGoodbye")}
+                    </button>
+                  )}
                   <button
                     type="button"
                     role="menuitem"
                     onClick={async () => {
                       setPlantMenuOpen(false);
-                      const msg = t("sayGoodbyeConfirm", { name: plant.nickname || plant.name });
+                      const msg = t("deletePlantConfirm", {
+                        name: plant.nickname || plant.name,
+                      });
                       if (!window.confirm(msg)) return;
-                      setEndingPlant(true);
-                      try {
-                        // Today's date at local noon (matches dateStrToTimestamp).
-                        const today = todayStr();
-                        await saveRecord({
-                          plantId: plant.id,
-                          timestamp: dateStrToTimestamp(today),
-                          actions: ["sayGoodbye"],
-                          states: [],
-                          photoIds: [],
-                        });
-                        // Auto-generate a farewell Growth Mark — the full
-                        // journey deserves its own memento.
-                        await createFarewellMark(plant.id);
-                        await Promise.all([reloadTimeline(), reloadPlant()]);
-                      } finally {
-                        setEndingPlant(false);
-                      }
+                      // deletePlant cascades to timeline / marks / photos.
+                      await deletePlant(plant.id);
+                      router.replace(`/${locale}/garden`);
                     }}
                     className="block w-full text-left px-3 py-2 text-xs transition-colors hover:bg-black/[0.03]"
-                    style={{ color: "#3a3530" }}
+                    style={{ color: "#a04040" }}
                   >
-                    🍂 {t("sayGoodbye")}
+                    🗑 {t("deletePlant")}
                   </button>
                 </div>
               )}

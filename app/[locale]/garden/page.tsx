@@ -23,10 +23,13 @@ import CloudModeBadge from "@/components/CloudModeBadge";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-/** Days the user has spent with this plant. Frozen for past plants (endedAt). */
-function companionDays(plant: Plant): number | null {
+/** Days the user has spent with this plant. Frozen for past plants (endedAt).
+ *  Pass `records` so the start date can fall back to the earliest timeline
+ *  entry when `startedOn` is unset — otherwise getTogetherDays uses
+ *  plant.createdAt and a fresh plant always shows 0 days. */
+function companionDays(plant: Plant, records: TimelineEntry[]): number | null {
   if (!plant.startedOn && !plant.createdAt) return null;
-  return getTogetherDays(plant);
+  return getTogetherDays(plant, records);
 }
 
 // pastAction / pastState key type helpers (garden namespace)
@@ -70,7 +73,7 @@ export default function GardenPage() {
         const entries = await getRecordsByPlant(plant.id); // newest-first
         return {
           plant,
-          days: companionDays(plant),
+          days: companionDays(plant, entries),
           latestEntry: entries[0] ?? null,
         };
       }),

@@ -219,14 +219,35 @@ async function fetchAsDataUrl(url: string): Promise<string> {
 // ─── Mutation hook: wire to dataStore writes ──────────────────────────────────
 //
 // All mutation paths in dataStore.ts already touch localStorage or IndexedDB.
-// Instead of editing each one, we listen for a "verdant:mutated" custom event
-// that dataStore will dispatch (added in a tiny patch). One listener, one
-// debounced push.
+// One listener fans out to a debounced push. Called explicitly from SeedInit
+// so it can't be tree-shaken away as an unused module side-effect, and so we
+// can attach extra resilience hooks (visibility, pagehide) at boot time.
+//
+// iOS-specific resilience:
+//   - iOS Chrome/Safari can suspend setTimeout in backgrounded tabs, so a
+//     pending debounce may never fire. We force a flush whenever the tab
+//     becomes visible again.
+//   - On pagehide we also flush, but iOS will frequently kill the page
+//     before the POST completes — that's why the visibility-based flush
+//     above matters more in practice.
 
-if (typeof window !== "undefined") {
+export function installSyncListener(): void {
+  if (typeof window === "undefined") return;
+  // Idempotent: a second call (e.g. React StrictMode double-effect) is a no-op.
+  const w = window as unknown as { __verdantSyncInstalled?: boolean };
+  if (w.__verdantSyncInstalled) return;
+  w.__verdantSyncInstalled = true;
+
   window.addEventListener("verdant:mutated", () => scheduleSync());
-  // Best-effort flush on page hide so a mid-session iOS Safari tab swap
-  // doesn't lose the last 500 ms of mutations.
+
+  window.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible" && isCloudMode()) {
+      // Tab regained focus — if the previous session debounced or was
+      // suspended mid-flight, push now so the server isn't stale.
+      void flushSync();
+    }
+  });
+
   window.addEventListener("pagehide", () => {
     if (isCloudMode()) void flushSync();
   });
