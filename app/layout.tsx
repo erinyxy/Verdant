@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Lora, Manrope } from "next/font/google";
+import { Lora, Manrope, Noto_Sans } from "next/font/google";
 import "./globals.css";
 
 // Lora Regular — 衬线字体，用于 wordmark 和品牌文字展示
@@ -15,6 +15,14 @@ const manrope = Manrope({
   weight: ["400", "500"],
   subsets: ["latin"],
   variable: "--font-manrope",
+  display: "swap",
+});
+
+// Noto Sans — 用于首页底部署名 "Erin's Lab"
+const notoSans = Noto_Sans({
+  weight: ["400", "500"],
+  subsets: ["latin"],
+  variable: "--font-noto-sans",
   display: "swap",
 });
 
@@ -43,7 +51,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html className={`min-h-full ${lora.variable} ${manrope.variable}`}>
+    <html className={`min-h-full ${lora.variable} ${manrope.variable} ${notoSans.variable}`}>
       <head>
         {/* 浏览器标签页图标 — 绿底填满，无白边 */}
         <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-filled-32.png" />

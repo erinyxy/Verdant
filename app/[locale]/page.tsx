@@ -348,14 +348,28 @@ export default function HomePage() {
           Plant Memory Journal
         </p>
 
-        {/* Growth Mark */}
-        <img
-          src="/icons/growth-mark-transparent-256.png"
-          alt=""
-          width={52}
-          height={52}
-          style={{ opacity: 0.35, marginTop: "4px" }}
-        />
+        {/* Growth Mark + signature — centered as one unit */}
+        <div className="flex items-center justify-center gap-2" style={{ marginTop: "4px" }}>
+          <img
+            src="/icons/growth-mark-transparent-256.png"
+            alt=""
+            width={52}
+            height={52}
+            style={{ opacity: 0.35 }}
+          />
+          <span
+            style={{
+              fontFamily: "var(--font-noto-sans), sans-serif",
+              fontSize: "11px",
+              fontWeight: 500,
+              letterSpacing: "0.04em",
+              // A touch greener than the sage tagline (#77826e).
+              color: "#5f8a55",
+            }}
+          >
+            Erin&apos;s Lab
+          </span>
+        </div>
       </div>
 
       {/* FAB — jump to Record */}
