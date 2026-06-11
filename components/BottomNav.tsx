@@ -62,9 +62,13 @@ export default function BottomNav() {
     <nav
       className="fixed bottom-0 left-0 right-0 z-50"
       style={{
-        background: "rgba(253, 250, 246, 0.92)",
-        backdropFilter: "blur(12px)",
-        WebkitBackdropFilter: "blur(12px)",
+        // NOTE: intentionally NO backdrop-filter. On iOS WebKit a fixed
+        // element with backdrop-filter leaves a same-width "ghost" repaint
+        // band above itself when the address bar collapses/expands, and that
+        // ghost layer also swallows taps on the nav. A near-opaque solid
+        // background looks the same here (the content behind is the warm
+        // ivory page anyway) without triggering the bug.
+        background: "rgba(253, 250, 246, 0.98)",
         borderTop: "1px solid rgba(201, 185, 154, 0.25)",
         paddingBottom: "env(safe-area-inset-bottom, 0px)",
       }}
