@@ -43,7 +43,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html className={`h-full ${lora.variable} ${manrope.variable}`}>
+    <html className={`min-h-full ${lora.variable} ${manrope.variable}`}>
       <head>
         {/* 浏览器标签页图标 — 绿底填满，无白边 */}
         <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-filled-32.png" />
@@ -51,7 +51,7 @@ export default function RootLayout({
         {/* iOS 主屏图标 — 180×180 */}
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
       </head>
-      <body className="h-full">{children}</body>
+      <body className="min-h-full">{children}</body>
     </html>
   );
 }

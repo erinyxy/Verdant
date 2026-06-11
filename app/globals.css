@@ -41,7 +41,11 @@
 
 html,
 body {
-  height: 100%;
+  /* min-height (not height:100%) so the document grows with content and the
+     page itself scrolls on mobile — the basis for a rock-solid `fixed`
+     BottomNav. A hard height:100% would cap the body at one viewport and
+     reintroduce the iOS inner-scroll desync. */
+  min-height: 100%;
   background-color: var(--warm-ivory);
   color: var(--charcoal);
   font-family: -apple-system, "Inter", "Helvetica Neue", Arial, sans-serif;

@@ -33,7 +33,7 @@ export default async function LocaleLayout({
        * instead of escaping to the browser viewport's corners.
        */}
       <div
-        className="min-h-screen md:flex md:items-center md:justify-center"
+        className="min-h-dvh md:min-h-screen md:flex md:items-center md:justify-center"
         style={{ background: "var(--bg-desktop, transparent)" }}
       >
         {/* Desktop chrome: subtle background */}
@@ -45,30 +45,36 @@ export default async function LocaleLayout({
 
         {/* Phone frame.
          *
-         * Mobile: full screen, NO transform. BottomNav must be fixed to the
-         * real viewport — iOS Chrome's address bar collapse/expand otherwise
-         * leaves it floating mid-screen because the containing block (this
-         * frame, sized in dvh) lags the visible viewport.
+         * Mobile: NO fixed height, NO inner scroll container, NO transform.
+         * The document itself scrolls (min-h-dvh just guarantees at least one
+         * screen). BottomNav is a plain `fixed bottom-0` — the single most
+         * reliable pattern on iOS. Earlier attempts used an h-dvh frame with
+         * an inner scroller, which desynced from the visual viewport whenever
+         * the address bar collapsed/expanded, leaking a band of frame
+         * background above the nav and trapping touches.
          *
-         * Desktop: phone-sized frame; the translateZ(0) creates a containing
-         * block so BottomNav and FABs stay inside the preview frame instead
-         * of escaping to the browser viewport corners. */}
+         * Desktop (md+): becomes a fixed-size phone preview. h-[844px] +
+         * overflow-hidden clips it; the inner div scrolls; translateZ(0)
+         * creates a containing block so BottomNav / FABs stay inside the
+         * frame instead of escaping to the browser viewport corners. */}
         <div
           className={[
-            "relative w-full h-dvh overflow-hidden",
-            "md:w-[390px] md:h-[844px] md:rounded-[44px] md:shadow-2xl md:overflow-hidden",
+            "relative w-full min-h-dvh",
+            "md:w-[390px] md:h-[844px] md:min-h-0 md:rounded-[44px] md:shadow-2xl md:overflow-hidden",
             "md:[transform:translateZ(0)]",
           ].join(" ")}
           style={{ background: "#faf8f4" }}
         >
           <SeedInit />
 
-          {/* Scrollable content area */}
-          <div className="h-full overflow-y-auto overscroll-contain pb-20">
+          {/* Content area. Mobile: no own scroll (document scrolls), just
+           *  bottom padding so the last items clear the fixed nav. Desktop:
+           *  becomes the scroll viewport inside the clipped frame. */}
+          <div className="pb-24 md:h-full md:overflow-y-auto md:overscroll-contain">
             <main>{children}</main>
           </div>
 
-          {/* Bottom nav — position:fixed, contained within the phone frame */}
+          {/* Bottom nav — fixed to viewport (mobile) / frame (desktop). */}
           <BottomNav />
 
           {/* Dev-only reset button — only visible in development */}
