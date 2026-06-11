@@ -43,20 +43,23 @@ export default async function LocaleLayout({
           }
         `}</style>
 
-        {/* Phone frame */}
+        {/* Phone frame.
+         *
+         * Mobile: full screen, NO transform. BottomNav must be fixed to the
+         * real viewport — iOS Chrome's address bar collapse/expand otherwise
+         * leaves it floating mid-screen because the containing block (this
+         * frame, sized in dvh) lags the visible viewport.
+         *
+         * Desktop: phone-sized frame; the translateZ(0) creates a containing
+         * block so BottomNav and FABs stay inside the preview frame instead
+         * of escaping to the browser viewport corners. */}
         <div
           className={[
-            // Mobile: full screen, no decoration
             "relative w-full h-dvh overflow-hidden",
-            // Desktop: phone-sized frame with rounded corners + shadow
             "md:w-[390px] md:h-[844px] md:rounded-[44px] md:shadow-2xl md:overflow-hidden",
+            "md:[transform:translateZ(0)]",
           ].join(" ")}
-          style={{
-            background: "#faf8f4",
-            // The transform creates a new containing block for position:fixed children.
-            // FABs and BottomNav will now be fixed *within* this frame, not the viewport.
-            transform: "translateZ(0)",
-          }}
+          style={{ background: "#faf8f4" }}
         >
           <SeedInit />
 
