@@ -348,8 +348,8 @@ export default function HomePage() {
           Plant Memory Journal
         </p>
 
-        {/* Growth Mark + signature — centered as one unit */}
-        <div className="flex items-center justify-center gap-2" style={{ marginTop: "4px" }}>
+        {/* Growth Mark + signature — stacked, centered as one unit */}
+        <div className="flex flex-col items-center justify-center gap-1" style={{ marginTop: "4px" }}>
           <img
             src="/icons/growth-mark-transparent-256.png"
             alt=""
