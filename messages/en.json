@@ -143,11 +143,7 @@
     "saveImage": "Save image",
     "saving": "Saving…",
     "caption": {
-      "7days": "7 days together 🌿",
-      "30days": "30 days together 🌿",
-      "90days": "90 days together 🌿",
-      "180days": "180 days together 🌿",
-      "365days": "365 days together 🌿"
+      "together": "{n} days together 🌿"
     },
     "farewell": {
       "caption": "Thank you for our {n} days together 💚",

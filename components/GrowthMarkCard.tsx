@@ -109,7 +109,7 @@ export default function GrowthMarkCard({
             whiteSpace: "nowrap",
           }}
         >
-          DAY {mark.milestoneDays}
+          {mark.milestoneDays === 730 ? "2 YEARS" : `DAY ${mark.milestoneDays}`}
         </div>
       )}
 
@@ -164,10 +164,14 @@ export default function GrowthMarkCard({
             whiteSpace: mark.kind === "farewell" ? "nowrap" : undefined,
           }}
         >
-          {/* Farewell caption interpolates {n}; milestone captions are static. */}
+          {/* Both captions interpolate {n} = milestoneDays. We no longer read
+              mark.captionKey (which used to be a per-day path like
+              "marks.caption.30days") — the caption is now a single template,
+              so any milestone day count renders correctly, including old marks
+              generated before this change. */}
           {mark.kind === "farewell"
             ? tRoot("marks.farewell.caption", { n: mark.milestoneDays })
-            : tRoot(mark.captionKey)}
+            : tRoot("marks.caption.together", { n: mark.milestoneDays })}
         </p>
       </header>
 

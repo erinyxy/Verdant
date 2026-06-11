@@ -68,7 +68,9 @@ export interface Photo {
 
 // ─── GrowthMark types ─────────────────────────────────────────────────────────
 
-export type MilestoneDays = 7 | 30 | 90 | 180 | 365;
+export type MilestoneDays =
+  | 7 | 30 | 60 | 100 | 150 | 200 | 250 | 300
+  | 365 | 400 | 500 | 600 | 700 | 730 | 800 | 900 | 1000;
 
 export type GrowthMarkEventType =
   | "firstPhoto"
@@ -473,7 +475,10 @@ export async function getPhotoNearDate(
 
 // ─── GrowthMark API ───────────────────────────────────────────────────────────
 
-const MILESTONES: MilestoneDays[] = [7, 30, 90, 180, 365];
+const MILESTONES: MilestoneDays[] = [
+  7, 30, 60, 100, 150, 200, 250, 300,
+  365, 400, 500, 600, 700, 730, 800, 900, 1000,
+];
 
 // Used for both same-day merge and >8 truncation.
 const EVENT_PRIORITY: Record<GrowthMarkEventType, number> = {
@@ -618,7 +623,9 @@ function buildMark(
     milestoneDate: milestoneDate.toISOString(),
     events: merged,
     stats,
-    captionKey: `marks.caption.${ms}days`,
+    // Single template caption (interpolates {n} at render time). Kept as a
+    // field for backward compatibility; the card no longer resolves per-day keys.
+    captionKey: "marks.caption.together",
   };
 }
 
