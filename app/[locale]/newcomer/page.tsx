@@ -10,7 +10,7 @@ import { useState, useRef } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { useRouter } from "next/navigation";
 import imageCompression from "browser-image-compression";
-import { savePlant, savePhoto } from "@/lib/dataStore";
+import { savePlant, savePhoto, saveRecord } from "@/lib/dataStore";
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
 
@@ -35,11 +35,14 @@ export default function NewcomerPage() {
   const locale = useLocale();
   const router = useRouter();
 
-  // Form state
+  // Form state — startedOn defaults to today so users don't accidentally leave
+  // it empty (which would make the day-1 photo land "now" instead of when they
+  // first met the plant). They can still pick a past date.
+  const todayStr = new Date().toISOString().slice(0, 10);
   const [photoDataUrl, setPhotoDataUrl] = useState<string | null>(null);
   const [name, setName] = useState("");
   const [nickname, setNickname] = useState("");
-  const [startedOn, setStartedOn] = useState("");
+  const [startedOn, setStartedOn] = useState(todayStr);
   const [nameError, setNameError] = useState(false);
   const [saving, setSaving] = useState(false);
 
@@ -70,31 +73,63 @@ export default function NewcomerPage() {
     setSaving(true);
 
     try {
-      // 1. Create plant (no coverPhotoId yet)
+      // The day-1 anchor. startedOn always has a value because the form
+      // defaults to today; falling back to today again here is defensive.
+      const startDate = startedOn || todayStr;
+      // Use local noon to match how the rest of the app constructs day-only
+      // timestamps (mirrors dateStrToTimestamp on the plant detail page);
+      // avoids the timezone surprise where `new Date(YYYY-MM-DD)` lands at
+      // 00:00 UTC and becomes the previous day in JST/CST locales.
+      const startTimestamp = new Date(`${startDate}T12:00:00`).toISOString();
+
+      // 1. Create plant (no coverPhotoId yet).
       const plant = await savePlant({
         name: name.trim(),
         nickname: nickname.trim() || undefined,
-        startedOn: startedOn || undefined,
+        startedOn: startDate,
       });
 
-      // 2. Save photo if provided
+      // 2. If a photo was uploaded: stamp it at startedOn (not "now"), then
+      //    attach it to an auto-generated bringHome record on the same day.
+      //    This matches seedData's day-1 pattern: photo as a regular (not
+      //    isCover) timeline photo, attached to a record so the timeline
+      //    has a real entry at day 1.
+      let dayOnePhotoId: string | undefined;
       if (photoDataUrl) {
         const photo = await savePhoto({
           plantId: plant.id,
-          timestamp: new Date().toISOString(),
+          timestamp: startTimestamp,
           dataUrl: photoDataUrl,
         });
-        // 3. Update plant with coverPhotoId
+        dayOnePhotoId = photo.id;
+      }
+
+      // 3. Auto-create the bringHome record at startedOn. Without a photo we
+      //    still create the record — the timeline should reflect "I brought
+      //    this home on <date>" regardless.
+      await saveRecord({
+        plantId: plant.id,
+        timestamp: startTimestamp,
+        actions: ["bringHome"],
+        states: [],
+        photoIds: dayOnePhotoId ? [dayOnePhotoId] : [],
+      });
+
+      // 4. If we have a day-1 photo, also use it as the avatar (coverPhotoId
+      //    fallback — handoff §7.1). Users can later swap the avatar via
+      //    CoverPhotoPicker (which uses isCover=true so it doesn't disturb
+      //    Growth Compare / Milestone queries).
+      if (dayOnePhotoId) {
         await savePlant({
           id: plant.id,
           name: plant.name,
           nickname: plant.nickname,
           startedOn: plant.startedOn,
-          coverPhotoId: photo.id,
+          coverPhotoId: dayOnePhotoId,
         });
       }
 
-      // 4. Navigate to detail page
+      // 5. Navigate to detail page.
       router.push(`/${locale}/plant/${plant.id}`);
     } catch (err) {
       console.error("Save failed", err);
@@ -218,10 +253,13 @@ export default function NewcomerPage() {
             type="date"
             value={startedOn}
             onChange={(e) => setStartedOn(e.target.value)}
-            max={new Date().toISOString().slice(0, 10)}
+            max={todayStr}
             className="w-full text-sm bg-transparent outline-none"
             style={{ color: startedOn ? "#2c2c2c" : "#b0aba5" }}
           />
+          <p className="text-[11px] mt-1" style={{ color: "#b0aba5" }}>
+            {t("startedOnHint")}
+          </p>
         </div>
       </div>
 

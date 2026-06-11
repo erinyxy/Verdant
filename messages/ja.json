@@ -127,6 +127,7 @@
     "nickname": "ニックネーム",
     "nicknamePlaceholder": "任意",
     "startedOn": "育て始めた日",
+    "startedOnHint": "迎え入れた日。空欄なら今日になります。",
     "save": "保存",
     "nameRequired": "植物の名前は必須です"
   },

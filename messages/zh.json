@@ -127,6 +127,7 @@
     "nickname": "昵称",
     "nicknamePlaceholder": "可不填",
     "startedOn": "开始养的时间",
+    "startedOnHint": "你把它带回家的那天。不选就是今天。",
     "save": "保存",
     "nameRequired": "植物名称为必填项"
   },

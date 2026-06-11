@@ -127,6 +127,7 @@
     "nickname": "Nickname",
     "nicknamePlaceholder": "Optional",
     "startedOn": "Started caring on",
+    "startedOnHint": "The day you brought it home. Defaults to today.",
     "save": "Save",
     "nameRequired": "Plant name is required"
   },
