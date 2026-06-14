@@ -1,6 +1,6 @@
 # Verdant 项目交接文档
 
-> **状态截至**：2026-05-31，commit `258a092`
+> **状态截至**：2026-06-11，commit `5ac9beb`
 > **目的**：让新 session 不用翻整段对话历史，也不用从头 grep 代码库，就能进入工作状态。
 > **维护**：每个重要 session 收尾时更新本文档。
 
@@ -26,6 +26,9 @@
 | `Verdant PRD.txt` | 原始 PRD（已被对话决策部分覆盖，以 CLAUDE.md 为准）|
 | `Verdant_Backlog.md` | 未来想法池：架构警示区 / 纯 Backlog 分类 |
 | `docs/growth-marks-spec.md` | Growth Marks 页（Milestones）的完整实施规格 |
+| `docs/cloud-mode.md` | **Cloud Mode**（单 owner 本地优先云同步）完整说明 + 事故教训 |
+| `docs/server-handoff/` | 给朋友 agent 的后端部署需求/契约/数据模型（4 件套）|
+| `docs/roadmap-native-app.md` | 做成原生 App 的方向决策与施工图（Capacitor / iCloud 防丢）|
 | `docs/project-handoff.md` | **本文档** |
 
 ---
@@ -43,13 +46,17 @@ verdant/
 │       ├── page.tsx            # Home：最近动态 + Growth Lookback + My Plants
 │       ├── garden/page.tsx     # My Garden：active + Once together 分区
 │       ├── milestones/page.tsx # Milestones：GrowthMark 卡片列表
-│       ├── newcomer/page.tsx   # 新建植物表单
-│       ├── plant/[id]/page.tsx # 植物详情（hero + Growth Compare + timeline）
+│       ├── newcomer/page.tsx   # 新建植物表单（自动建 day-1 bringHome 记录）
+│       ├── plant/[id]/page.tsx # 植物详情（hero + Growth Compare + timeline + 删除植物）
+│       ├── owner/page.tsx      # 隐藏 Cloud Mode 入口（不链接，owner 手输 URL）
 │       └── record/page.tsx     # 记录表单（FAB 入口）
 │
 ├── lib/
 │   ├── dataStore.ts            # ★ 所有数据访问的单一抽象层（必读）
-│   └── seedData.ts             # demo 数据初始化（4-5 株植物）
+│   │                           #   写入处 dispatch verdant:mutated 供 cloudSync 监听
+│   ├── seedData.ts             # demo 数据初始化（5 株植物）
+│   ├── storeMode.ts            # Local/Cloud 模式状态机 + detectMode()
+│   └── cloudSync.ts            # Cloud Mode 背景同步（push/pull/iOS 韧性）
 │
 ├── hooks/
 │   └── useDataStore.ts         # usePlants / usePlant / useTimeline / usePhotosByPlant
@@ -65,7 +72,8 @@ verdant/
 │   ├── CoverPhotoPicker.tsx    # 植物详情 hero 上换头像的底部抽屉
 │   ├── SampleDataBanner.tsx    # 示例数据提示横幅（Home + Garden）
 │   ├── FirstPlantEmptyState.tsx# 无植物时的温暖空状态
-│   ├── DataMenu.tsx            # Garden header 齿轮：导出/导入备份
+│   ├── DataMenu.tsx            # Garden header 齿轮：导出/导入备份 + Cloud Mode 入口
+│   ├── CloudModeBadge.tsx      # Garden header 小角标（仅 Cloud Mode 显示）
 │   └── LocaleSwitcher.tsx      # Home header 的语言切换
 │
 ├── messages/
@@ -84,6 +92,8 @@ verdant/
 │   │   └── ...
 │   └── demo-photos/            # seed 引用的真实植物照片
 │
+├── scripts/
+│   └── sync-demo-from-server.mjs  # npm run sync-demo：服务器数据 → 重写 seedData + demo-photos
 ├── proxy.ts                    # next-intl middleware（Next.js 16 改名为 proxy）
 ├── i18n/{request,routing}.ts   # next-intl 配置
 └── package.json
@@ -202,7 +212,10 @@ coverPhoto?: string   // isCover=true 的独立头像，可有可无
 
 详见 `docs/growth-marks-spec.md`。要点：
 
-- **5 档 milestone**：7 / 30 / 90 / 180 / 365 天
+- **17 档 milestone**：7 / 30 / 60 / 100 / 150 / 200 / 250 / 300 / 365 / 400 / 500 / 600 / 700 / 730 / 800 / 900 / 1000 天
+  - caption 已**模板化**（`marks.caption.together` 用 `{n}` 插值），加档位零翻译成本
+  - 730 那张卡右上角胶囊显示 "2 YEARS"（caption 仍是 "730 days together"）
+  - 旧 mark 的 captionKey 指向已删的 per-day key，但卡片改读 `milestoneDays` 走模板，照常渲染
 - **触发时机**：进 `/milestones` 页时 `syncMarks()` 一次性扫描所有 plant，生成缺失的卡。**懒触发**。
 - **快照原则**：已生成的 mark 永不修改（即使 timeline 后续改变）
 - **无照片不生成**：周期内没照片 → skip
@@ -310,13 +323,15 @@ CLAUDE.md 已锁定纯前端、无云同步。所以**用户必须养成定期�
 - 存网盘/邮件给自己/U 盘
 - 换设备/换浏览器：旧设备导出 → 新设备 Restore
 
-`navigator.storage.persist()` 已经主动请求 persistent storage，但**不是 100% 防丢**（用户主动清缓存还是没救）。Pro 版云同步是 backlog 里规划的下一步，目前不做。
+`navigator.storage.persist()` 已经主动请求 persistent storage，但**不是 100% 防丢**（用户主动清缓存、iOS Safari 7 天回收 PWA 存储还是没救）。
+
+> **防丢的正式方案已定方向**：做成原生 App（Capacitor 包壳，绕开 Safari 回收）+ iOS 走 iCloud Drive 防丢。详见 `docs/roadmap-native-app.md`。owner 自己已有 Cloud Mode（`docs/cloud-mode.md`），但那是单用户专用，不是公开用户的备份方案。
 
 ---
 
-## 11. 当前 session 完成的主要工作（2026-05 截至）
+## 11. 完成的主要工作
 
-按时间线：
+### 2026-05 截至（按时间线）
 
 1. **项目骨架 + i18n + dataStore 抽象** —— Day 1 全部就位
 2. **5 个真实页面**（Home / Garden / Milestones / Plant Detail / Newcomer / Record）
@@ -330,6 +345,20 @@ CLAUDE.md 已锁定纯前端、无云同步。所以**用户必须养成定期�
 10. **Farewell Growth Mark**（新 kind）+ Lora 衬线题刻
 11. **品牌 V icon 全套**（iOS + PWA + favicon + 卡片 watermark）
 12. **卡片导出打磨**：rounded-3xl + pixelRatio 3 + 透明圆角
+
+### 2026-06 截至
+
+13. **Cloud Mode**（单 owner 本地优先云同步，Tailscale 后端）—— 详见 `docs/cloud-mode.md`
+    - `storeMode` + `cloudSync` + `/owner` 隐藏页 + CloudModeBadge + DataMenu 入口
+    - 后端部署在朋友服务器（`docs/server-handoff/` 4 件套交接），sync-demo 脚本反向更新 demo
+    - ⚠️ 踩坑：default-pull 清空本地丢过数据；iOS setTimeout 挂起漏同步（均已修，见 cloud-mode §8）
+14. **删除植物**功能（详情页 3-dot 菜单，cascade 删 timeline/marks/photos，past 植物也能删）
+15. **Newcomer day-1 锚定**：照片 + 自动 bringHome 记录都落在 startedOn（不再是"今天"）
+16. **Garden together-days 修复**：`getTogetherDays` 传 records，无 startedOn 时用最早记录兜底
+17. **iOS viewport 根治**：手机端改文档滚动 + 纯 fixed nav（去掉 h-dvh 框 + translateZ + backdrop-filter）
+18. **Milestone 5 → 17 档** + caption 模板化 + 730="2 YEARS" 胶囊
+19. **首页 "Erin's Lab" 署名**（Noto Sans，图案下方居中）
+20. **方向决策**：做成原生 App（Capacitor），云留作 Pro，iOS 走 iCloud 防丢 —— 详见 `docs/roadmap-native-app.md`
 
 ---
 
